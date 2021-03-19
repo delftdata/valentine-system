@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-cluster-ip-service
+spec:
+  type: NodePort
+  selector:
+    component: web
+  ports:
+    - port: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: web
+  template:
+    metadata:
+      labels:
+        component: web
+    spec:
+      containers:
+        - name: client
+          image: kpsarakis/schema-matching-client:latest
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 3000

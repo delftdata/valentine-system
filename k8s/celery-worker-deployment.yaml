@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-deployment
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      component: worker
+  template:
+    metadata:
+      labels:
+        component: worker
+    spec:
+      containers:
+        - name: worker
+          image: kpsarakis/schema-matching-engine:latest
+          resources:
+            limits:
+              memory: "24Gi"
+              cpu: "8"
+            requests:
+              memory: "24Gi"
+              cpu: "8"
+          command: ["celery"]
+          args: ["worker", "-A", "app.celery", "--concurrency=8", "--loglevel=info"]
+          ports:
+            - containerPort: 5000
+          env:
+            - name: REDIS_HOST
+              value: redis-master
+            - name: REDIS_PORT
+              value: '6379'
+            - name: REDIS_PASSWORD
+              value: "redis"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: '5672'
+            - name: RABBITMQ_DEFAULT_USER
+              value: rabbitmq
+            - name: RABBITMQ_DEFAULT_PASS
+              value: rabbitmq
+            - name: MINIO_HOST
+              value: minio
+            - name: MINIO_PORT
+              value: '9000'
+            - name: MINIO_ACCESS_KEY
+              value: "minio"
+            - name: MINIO_SECRET_KEY
+              value: "minio123"

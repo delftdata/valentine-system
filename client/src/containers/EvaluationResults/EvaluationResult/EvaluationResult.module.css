@@ -1,0 +1,42 @@
+.FabricatedPair {
+    /*vertical-align: top;*/
+    width: 60%;
+    border-bottom: 2px solid #455a64;
+    border-left: 2px solid #455a64;
+    padding: 10px;
+    margin: 10px auto;
+    box-sizing: border-box;
+    /*transform: translateY(-100px);*/
+}
+.Container {
+    max-height: 800px;
+}
+
+.Parent {
+    width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+
+.Pagination {
+    transform: translateX(-150px);
+}
+
+.Buttons {
+    text-align: right;
+}
+
+.Paragraph {
+    text-align: left;
+}
+
+.Results {
+    width: 100%;
+}
+
+.Sample {
+    margin-left: 5px;
+    margin-right: 5px;
+    /*width: 49%;*/
+}

@@ -1,0 +1,45 @@
+.NavigationItems {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    height: 100%;
+}
+
+.Logo {
+    border-right: 1px solid #162545;
+    margin: 10px 0;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+}
+
+.Logo a:hover,
+.Logo a:active,
+.Logo a.active {
+    color: #1f618d;
+}
+
+@media (min-width: 500px) {
+    .Logo {
+        display: flex;
+        height: 100%;
+        width: auto;
+        align-items: center;
+    }
+
+    .Logo a:hover,
+    .Logo a:active,
+    .Logo a.active {
+        background-color: #588ddb;
+    }
+}
+
+
+@media (min-width: 500px) {
+    .NavigationItems {
+        flex-flow: row;
+    }
+}

@@ -1,0 +1,45 @@
+.submitButtonFooter {
+    text-align:center;
+    position: fixed;
+    bottom: 0;
+    padding: 20px;
+    width: 100%;
+    background-color: #00A6D6;
+}
+
+.submitButton {
+    width: 20%;
+    bottom: 0;
+    right: 0;
+}
+
+.selectFile {
+    float:left;
+    display:inline;
+    margin-top: 80px;
+    margin-left: 40px;
+    /*box-shadow: 0 2px 3px #2980b9;*/
+    /*border: 5px solid #7fb3d5;*/
+    /*border-right: 2px solid #455a64;*/
+    padding: 20px;
+    margin-right: 5px;
+    box-sizing: border-box;
+    width: 25%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.FabricationMethods{
+    /*box-shadow: 0 2px 3px #2980b9;*/
+    /*border: 5px solid #7fb3d5;*/
+    /*border-right: 2px solid #455a64;*/
+    box-sizing: border-box;
+    padding: 20px;
+    float:left;
+    display:inline;
+    width: 70%;
+    margin-top: 80px;
+    margin-bottom: 80px;
+    margin-left: 40px;
+}

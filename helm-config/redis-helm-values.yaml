@@ -1,0 +1,17 @@
+password: redis
+cluster:
+  slaveCount: 3
+master:
+  persistence:
+    size: 8Gi
+  resources:
+    requests:
+      memory: 8Gi
+      cpu: 1
+slave:
+  persistence:
+    size: 4Gi
+  resources:
+    requests:
+      memory: 4Gi
+      cpu: 1

@@ -1,0 +1,31 @@
+.Results {
+    width: 100%;
+}
+
+.Result {
+    width: 90%;
+    border-bottom: 2px solid #455a64;
+    border-left: 2px solid #455a64;
+    padding: 10px;
+    margin: 10px auto;
+    box-sizing: border-box;
+}
+
+.Root {
+    width: 100%;
+}
+
+.Container {
+    max-height: 800px;
+}
+
+.Parent {
+    width: 75%;
+    margin-top: 80px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.Pagination {
+    transform: translateX(-100px);
+}

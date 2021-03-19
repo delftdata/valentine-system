@@ -1,0 +1,31 @@
+.ListRoot {
+    width: 100%;
+    max-width: 360px;
+    /*background-color: white;*/
+}
+
+.ListSource {
+    /*box-shadow: 0 2px 3px #2980b9;*/
+    /*border: 5px solid #7fb3d5;*/
+    border-right: 2px solid #455a64;
+    padding: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    box-sizing: border-box;
+}
+
+.labelRoot {
+    display: flex;
+    align-items: center;
+    padding: 5px 5px;
+}
+
+.labelIcon {
+    margin-right: 4px;
+}
+
+.labelText {
+    font-weight: inherit;
+    flex-grow: 1;
+}
+

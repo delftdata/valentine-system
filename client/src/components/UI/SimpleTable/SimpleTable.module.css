@@ -1,0 +1,26 @@
+td, th {
+    border: 1px solid black;
+    background: white;
+}
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+
+.Table {
+    overflow-x:auto;
+    position: relative;
+    max-width: 600px;
+    max-height: 300px;
+    font-size: 11px;
+    overflow-y: auto;
+    /*margin-left: 5px;*/
+    /*margin-right: 5px;*/
+    /*border-collapse: collapse;*/
+    /*color: #162545;*/
+    /*background: white;*/
+    /*border: 1px solid black;*/
+}

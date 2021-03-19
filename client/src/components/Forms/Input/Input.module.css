@@ -1,0 +1,37 @@
+.Input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.Label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.Slider {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 90%;
+}
+
+.Select {
+    width: 100%;
+}
+
+.InputElement {
+    outline: none;
+    border: 1px solid gray;
+    background-color: white;
+    font: inherit;
+    padding: 6px 10px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.InputElement:focus {
+    outline: none;
+    background-color: lightgray;
+}

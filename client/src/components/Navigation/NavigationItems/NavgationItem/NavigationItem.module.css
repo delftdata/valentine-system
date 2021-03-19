@@ -1,0 +1,52 @@
+.NavigationItem {
+    border-right: 1px solid #162545;
+    margin: 10px 0;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+}
+
+.NavigationIcon {
+    float:left;
+    display:inline;
+    margin-right: 15px;
+}
+
+.NavigationItem a {
+    color: #85c1e9 ;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+}
+
+.NavigationItem a:hover,
+.NavigationItem a:active,
+.NavigationItem a.active {
+    color: #1f618d;
+}
+
+@media (min-width: 500px) {
+    .NavigationItem {
+        margin: 0;
+        display: flex;
+        height: 100%;
+        width: auto;
+        align-items: center;
+    }
+
+    .NavigationItem a {
+        color: white;
+        height: 100%;
+        padding: 16px 10px;
+        border-bottom: 4px solid transparent;
+    }
+
+    .NavigationItem a:hover,
+    .NavigationItem a:active,
+    .NavigationItem a.active {
+        background-color: #588ddb;
+        border-bottom: 4px solid #c0392b;
+        color: black;
+    }
+}

@@ -1,0 +1,32 @@
+.submitButtonFooter {
+    text-align:center;
+    position: fixed;
+    bottom: 0;
+    padding: 20px;
+    width: 100%;
+    background-color: #00A6D6;
+}
+
+.submitButton {
+    width: 20%;
+    bottom: 0;
+    right: 0;
+}
+
+.fabDataList {
+    float:left;
+    display:inline;
+    width: 20%;
+    margin-top: 80px;
+    margin-bottom: 80px;
+    margin-left: 80px;
+}
+
+.AlgorithmSelection{
+    float:left;
+    display:inline;
+    width: 70%;
+    margin-top: 80px;
+    margin-bottom: 80px;
+    margin-left: 80px;
+}

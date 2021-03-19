@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower-service
+spec:
+  type: NodePort
+  selector:
+    component: flower
+  ports:
+    - port: 5555
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: flower
+  template:
+    metadata:
+      labels:
+        component: flower
+    spec:
+      containers:
+        - name: flower
+          image: kpsarakis/schema-matching-engine:latest
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+          command: ['celery']
+          args: ['flower', '-A', 'app.celery', 'flower', '--broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/']
+          ports:
+            - containerPort: 5555
+          env:
+            - name: REDIS_HOST
+              value: redis-master
+            - name: REDIS_PORT
+              value: '6379'
+            - name: REDIS_PASSWORD
+              value: "redis"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: '5672'
+            - name: RABBITMQ_DEFAULT_USER
+              value: rabbitmq
+            - name: RABBITMQ_DEFAULT_PASS
+              value: rabbitmq
+            - name: MINIO_HOST
+              value: minio
+            - name: MINIO_PORT
+              value: '9000'
+            - name: MINIO_ACCESS_KEY
+              value: "minio"
+            - name: MINIO_SECRET_KEY
+              value: "minio123"

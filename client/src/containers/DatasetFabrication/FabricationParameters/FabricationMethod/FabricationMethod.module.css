@@ -1,0 +1,30 @@
+.FabricationMethod {
+    float:left;
+    display:inline;
+    width: 20%;
+    border-right: 2px solid #455a64;
+    /*box-shadow: 0 1px 1px #2980b9;*/
+    /*border: 2px solid #7fb3d5;*/
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    box-sizing: border-box;
+}
+
+.Header {
+    display: flex;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.Choice {
+    display: flex;
+}
+
+.TextField {
+    margin-left: 10px;
+}
+
+.IncludeHeader {
+    margin-left: 10px;
+}

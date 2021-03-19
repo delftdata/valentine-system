@@ -1,0 +1,39 @@
+# General
+setuptools==54.0.0
+wheel==0.36.2
+bitarray==1.7.0
+# Algorithms
+numpy==1.20.1
+scipy==1.6.1
+pandas==1.2.3
+nltk==3.5
+snakecase==1.0.1
+anytree==2.8.0
+six==1.15.0
+strsim==0.0.3
+networkx==2.5
+chardet==4.0.0
+python-Levenshtein==0.12.2
+PuLP==2.4
+pyemd==0.5.1
+# Data Sources
+cached-property==1.5.2
+openpyxl==3.0.6
+python-dateutil==2.8.1
+more-itertools==8.7.0
+# Flask API
+Flask==1.1.2
+Flask-WTF==0.14.3
+Flask-Cors==3.0.10
+pydantic==1.8.1
+requests==2.25.1
+gunicorn==20.0.4
+# redis connector
+redis==3.5.3
+# minio connector
+minio==7.0.2
+# celery
+celery==4.4.7
+msgpack==1.0.2
+# flower
+flower==0.9.5

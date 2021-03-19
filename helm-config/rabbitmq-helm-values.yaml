@@ -1,0 +1,10 @@
+auth:
+  username: rabbitmq
+  password: rabbitmq
+resources:
+  requests:
+    memory: 1Gi
+    cpu: 1000m
+  limits:
+    memory: 1Gi
+    cpu: 1000m

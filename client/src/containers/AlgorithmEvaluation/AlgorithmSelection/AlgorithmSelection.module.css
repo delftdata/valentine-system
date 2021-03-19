@@ -1,0 +1,28 @@
+.Algorithms {
+    /*float:left;*/
+    /*display:inline;*/
+    /*box-shadow: 0 2px 3px #2980b9;*/
+    /*border-left: 2px solid #455a64;*/
+    /*overflow-x: scroll;*/
+    padding: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 15px;
+    /*box-sizing: border-box;*/
+}
+
+.Algorithm {
+    float:left;
+    /*display:inline;*/
+    width: 20%;
+    /*box-shadow: 0 1px 1px #2980b9;*/
+    border: 1px solid #455a64;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    /*box-sizing: border-box;*/
+}
+
+.Description {
+    font-size: 14px;
+}

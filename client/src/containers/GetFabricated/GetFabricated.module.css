@@ -1,0 +1,54 @@
+.Results {
+    width: 100%;
+}
+
+
+.Sample {
+    /*margin-left: auto;*/
+    /*margin-right: auto;*/
+    /*float:left;*/
+    /*display:inline;*/
+    /*width: 25%*/
+}
+
+.Result {
+    vertical-align: top;
+    width: 80%;
+    border-bottom: 3px solid #455a64;
+    border-left: 3px solid #455a64;
+    padding: 10px;
+    margin: 10px auto;
+    box-sizing: border-box;
+}
+
+.Root {
+    width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+    border-left: 3px solid #455a64;
+    border-bottom: 3px solid #455a64;
+}
+
+.Container {
+    max-height: 850px;
+}
+
+.Parent {
+    width: 100%;
+    margin-top: 80px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: -80px;
+}
+
+.Buttons {
+    text-align: right;
+}
+
+.Paragraph {
+    text-align: left;
+}
+
+.Pagination {
+    transform: translateX(-100px);
+}

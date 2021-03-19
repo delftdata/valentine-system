@@ -1,0 +1,50 @@
+.LandingPageTitle {
+    text-align: center;
+    color: #37474f;
+    left: -15px;
+}
+
+.LandingPageItems {
+    /*margin-left: 40px;*/
+    /*margin-right: 40px;*/
+}
+
+.LeftLandingPageItem {
+    text-align: center;
+    display: inline-block;
+    width: 49%;
+    margin-top: -40px;
+    margin-bottom: 80px;
+    color: #37474f;
+    /*border-right: 1px solid #162545;*/
+}
+
+.RightLandingPageItem {
+    text-align: center;
+    display: inline-block;
+    width: 49%;
+    margin-top: -40px;
+    margin-bottom: 80px;
+    color: #37474f;
+    /*border-left: 1px solid #162545;*/
+}
+
+.Footer {
+    float:left;
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #00A6D6;
+}
+
+.Link {
+    margin-top: 80px;
+    margin-left: 20px;
+}
+
+.Kiss {
+    text-align: center;
+    position: relative;
+    top: -30px;
+}

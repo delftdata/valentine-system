@@ -1,0 +1,46 @@
+.Results {
+    width: 100%;
+}
+
+.Result {
+    vertical-align: top;
+    width: 80%;
+    border-left: 3px solid #455a64;
+    border-bottom: 3px solid #455a64;
+    padding-left: 20px;
+    /*padding: 10px;*/
+    /*margin: 10px auto;*/
+}
+
+
+.Container {
+    max-height: 800px;
+}
+
+.Parent {
+    width: 75%;
+    margin-top: 80px;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+
+.Pagination {
+    transform: translateX(-100px);
+}
+
+.Buttons {
+    text-align: right;
+}
+
+.Paragraph {
+    text-align: left;
+}
+
+.Modal {
+    vertical-align: top;
+    margin: auto;
+    width: 80%;
+    height: 80%;
+    transform: translateX(400px);
+}
