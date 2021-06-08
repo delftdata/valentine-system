@@ -29,7 +29,7 @@ from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.base_db import BaseDB
 from engine.data_sources.minio.minio_source import MinioSource
 from engine.data_sources.minio.minio_table import MinioTable
-from engine.forms import UploadFileToMinioForm
+from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
     MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
 
@@ -511,6 +511,49 @@ def valentine_get_fabricated_sample(dataset_id: str):
                                ["2009/2010", "0", "0", "0", "0", "0", "0", "0", "0", "0", "1", "1014663", "ICRC Appeals via CRCS", "Canadian Non-Profit Making", "Civil Society", "INTERNATIONAL NGO", "1", "America", "X2", "X2", "Americas MC", "0.15", "72010", "Material relief assistance and services", "1.0", "450000.0"]],
     }
     return jsonify(response)
+
+
+@app.route('/valentine/get_fabricated_sample', methods=['POST'])
+def valentine_fabricate_data():
+    form = DatasetFabricationForm()
+    if not form.validate_on_submit():
+        abort(400, form.errors)
+
+    tmp_dir: str = gettempdir()
+    bucket_name = "FabricatedData"
+
+    filename = secure_filename(form.resource.data.filename)
+    file_path = path.join(tmp_dir, filename)  # File location
+    form.resource.data.save(file_path)
+
+    if form.fabricate_joinable.data:
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = form.joinable_specs.data
+        pairs: int = form.joinable_pairs.data
+        pass
+
+    # example of storing data to minio
+    filename = ...
+    file = ...
+    minio_client.fput_object(bucket_name, filename, file)
+
+    if form.fabricate_unionable.data:
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = form.unionable_specs.data
+        pairs: int = form.unionable_pairs.data
+        pass
+
+    if form.fabricate_view_unionable.data:
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = form.fabricate_view_unionable.data
+        pairs: int = form.view_unionable_pairs.data
+        pass
+
+    if form.fabricate_semantically_joinable.data:
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = form.semantically_joinable_specs.data
+        pairs: int = form.semantically_joinable_pairs.data
+        pass
 
 
 if __name__ != '__main__':
