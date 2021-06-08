@@ -513,7 +513,7 @@ def valentine_get_fabricated_sample(dataset_id: str):
     return jsonify(response)
 
 
-@app.route('/valentine/get_fabricated_sample', methods=['POST'])
+@app.route('/valentine/fabricate_data', methods=['POST'])
 def valentine_fabricate_data():
     form = DatasetFabricationForm()
     if not form.validate_on_submit():
