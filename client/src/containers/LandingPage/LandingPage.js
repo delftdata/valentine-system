@@ -43,7 +43,9 @@ class LandingPage extends Component {
                 <div className={classes.Footer}>
                     <img src={TUDLogo} alt={"TU Delft logo"}/>
                     <div className={classes.Link}>
-                        <Link href="https://github.com/delftdata" onClick={this.preventDefault} color="#263238">
+                        <Link href="https://github.com/delftdata"
+                              onClick={this.preventDefault}
+                              style={{color: '#263238'}}>
                             TU Delft Data Management Team
                         </Link>
                     </div>
