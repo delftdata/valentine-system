@@ -29,6 +29,7 @@ from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.base_db import BaseDB
 from engine.data_sources.minio.minio_source import MinioSource
 from engine.data_sources.minio.minio_table import MinioTable
+from engine.data_sources.minio.minio_utils import get_pandas_df_from_minio_csv_file
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
     MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
@@ -513,47 +514,75 @@ def valentine_get_fabricated_sample(dataset_id: str):
     return jsonify(response)
 
 
-@app.route('/valentine/fabricate_data', methods=['POST'])
+@celery.task
+def create_fabricated_data(file_name: str,
+                           dataset_group_name: str,
+                           fabrication_variants: tuple[bool, bool, bool, bool],
+                           fabrication_parameters: tuple[list[bool], list[bool], list[bool], list[bool]],
+                           fabrication_pairs: tuple[int, int, int, int]):
+
+    df = get_pandas_df_from_minio_csv_file(minio_client, 'tmp-folder', file_name)  # the loaded csv file
+
+    fbr_joinable, fbr_unionable, fbr_view_unionable, fbr_semantically_joinable = fabrication_variants
+    joinable_specs, unionable_specs, view_unionable_specs, semantically_joinable_specs = fabrication_parameters
+    joinable_pairs, unionable_pairs, view_unionable_pairs, semantically_joinable_pairs = fabrication_pairs
+
+    bucket_name = "FabricatedData"
+
+    if fbr_joinable:
+        app.logger.info(f"Fabricating Joinable data for: {file_name}")
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = joinable_specs
+        pairs: int = joinable_pairs
+
+    # example of storing data to minio
+    # filename = ...
+    # file = ...
+    # minio_client.fput_object(bucket_name, filename, file)
+
+    if fbr_unionable:
+        app.logger.info(f"Fabricating Unionable data for: {file_name}")
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = unionable_specs
+        pairs: int = unionable_pairs
+
+    if fbr_view_unionable:
+        app.logger.info(f"Fabricating View Unionable data for: {file_name}")
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = view_unionable_specs
+        pairs: int = view_unionable_pairs
+
+    if fbr_semantically_joinable:
+        app.logger.info(f"Fabricating Semantically Joinable data for: {file_name}")
+        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
+        what_to_fabricate: list[bool] = semantically_joinable_specs
+        pairs: int = semantically_joinable_pairs
+
+    minio_client.remove_object('tmp-folder', file_name)
+
+
+@app.route('/valentine/submit_data_fabrication_job', methods=['POST'])
 def valentine_fabricate_data():
     form = DatasetFabricationForm()
     if not form.validate_on_submit():
         abort(400, form.errors)
+    job_uuid: str = str(uuid.uuid4())
+    uploaded_file = form.resource.data
+    size = os.fstat(uploaded_file.fileno()).st_size
+    if not minio_client.bucket_exists('tmp-folder'):
+        minio_client.make_bucket('tmp-folder')
+    minio_client.put_object('tmp-folder', uploaded_file.filename, uploaded_file, size)
 
-    tmp_dir: str = gettempdir()
-    bucket_name = "FabricatedData"
+    fabrication_variants = (form.fabricate_joinable.data, form.fabricate_unionable.data,
+                            form.fabricate_view_unionable.data, form.fabricate_semantically_joinable.data)
+    fabrication_parameters = (form.joinable_specs.data, form.unionable_specs.data,
+                              form.view_unionable_specs.data, form.semantically_joinable_specs.data)
+    fabrication_pairs = (form.joinable_pairs.data, form.unionable_pairs.data,
+                         form.view_unionable_pairs.data, form.semantically_joinable_pairs.data)
+    create_fabricated_data.s(uploaded_file.filename, form.dataset_group_name.data, fabrication_variants,
+                             fabrication_parameters, fabrication_pairs).apply_async()
 
-    filename = secure_filename(form.resource.data.filename)
-    file_path = path.join(tmp_dir, filename)  # File location
-    form.resource.data.save(file_path)
-
-    if form.fabricate_joinable.data:
-        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
-        what_to_fabricate: list[bool] = form.joinable_specs.data
-        pairs: int = form.joinable_pairs.data
-        pass
-
-    # example of storing data to minio
-    filename = ...
-    file = ...
-    minio_client.fput_object(bucket_name, filename, file)
-
-    if form.fabricate_unionable.data:
-        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
-        what_to_fabricate: list[bool] = form.unionable_specs.data
-        pairs: int = form.unionable_pairs.data
-        pass
-
-    if form.fabricate_view_unionable.data:
-        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
-        what_to_fabricate: list[bool] = form.fabricate_view_unionable.data
-        pairs: int = form.view_unionable_pairs.data
-        pass
-
-    if form.fabricate_semantically_joinable.data:
-        # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
-        what_to_fabricate: list[bool] = form.semantically_joinable_specs.data
-        pairs: int = form.semantically_joinable_pairs.data
-        pass
+    return jsonify(job_uuid)
 
 
 if __name__ != '__main__':
