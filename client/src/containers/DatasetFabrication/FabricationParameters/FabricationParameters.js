@@ -5,19 +5,36 @@ import FabricationMethod from "./FabricationMethod/FabricationMethod";
 class FabricationParameters extends Component {
 
     state = {
-        isSelected:{
-            "Joinable": false,
-            "Unionable": false,
-            "View Unionable": false,
-            "Semantically Joinable": false
-        }
+        joinable: {},
+        unionable: {},
+        viewUnionable: {},
+        semanticallyJoinable: {}
     }
 
+    getSelected(val, variant) {
+        const updatedState = {...this.state}
+        if (variant === "Joinable") {
+            updatedState.joinable = {...val}
+        } else if (variant === "Unionable") {
+            updatedState.unionable = {...val}
+        } else if (variant === "View Unionable") {
+            updatedState.viewUnionable = {...val}
+        } else if (variant === "Semantically Joinable") {
+            updatedState.semanticallyJoinable = {...val}
+        }
+        this.props.sendSelected(updatedState)
+        this.setState(updatedState)
+    }
+
+
     render() {
+        const fabricationVariant = ["Joinable", "Unionable", "View Unionable", "Semantically Joinable"]
         return(
             <div className={classes.FabricationMode}>
-                {Object.keys(this.state.isSelected).map((value) => {
-                    return <FabricationMethod methodName={value}/>
+                {fabricationVariant.map((value) => {
+                    return <FabricationMethod key={value}
+                                              methodName={value}
+                                              sendSelected={(val) => this.getSelected(val, value)}/>
                 })}
             </div>
         );

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import FileField, BooleanField, FieldList, IntegerField
+from wtforms import FileField, BooleanField, FieldList, IntegerField, StringField
 from wtforms.validators import DataRequired, Optional
 
 
@@ -14,6 +14,7 @@ class UploadFileToMinioForm(BaseForm):
 
 class DatasetFabricationForm(BaseForm):
     resource = FileField('file', validators=[DataRequired()])
+    dataset_group_name = StringField('dataset_group_name', validators=[DataRequired()])
     fabricate_joinable = BooleanField('fabricate_joinable', validators=[Optional()],
                                       default=False)
     joinable_specs = FieldList(BooleanField('joinable_specs', validators=[Optional()]),

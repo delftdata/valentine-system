@@ -8,7 +8,7 @@ import {NavLink} from "react-router-dom";
 const navigationItems = (props) => (
     <ul className={classes.NavigationItems}>
         <div>
-            <li className={classes.Logo}>
+            <li key={"/"} className={classes.Logo}>
                 <NavLink
                     to={"/"}
                     exact
@@ -18,7 +18,7 @@ const navigationItems = (props) => (
             </li>
         </div>
         {props.toolbar_elements.map((row) => (
-            <NavigationItem link={row.link} exact icon={row.icon}>
+            <NavigationItem key={row.link} link={row.link} exact icon={row.icon}>
                 {row.text}
             </NavigationItem>
         ))}
