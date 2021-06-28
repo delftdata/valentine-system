@@ -14,7 +14,8 @@ class DatasetFabrication extends Component {
     state = {
         loading: false,
         responseReceived: false,
-        fileToBeSent: null,
+        csvFileToBeSent: null,
+        jsonFileToBeSent: null,
         datasetGroupName: '',
         selectedVariants: {},
         latestResponse: ''
@@ -23,14 +24,16 @@ class DatasetFabrication extends Component {
     getSelected(val, mode){
         if(mode==="fabricationParams"){
             this.setState({selectedVariants: {...val}});
-        }else if(mode==="file"){
-            this.setState({fileToBeSent: val});
         }
     }
 
-    changeFileHandler = (event) => {
+    changeFileHandler = (event, fileType) => {
         event.preventDefault();
-        this.setState({fileToBeSent: event.target.files[0]})
+        if (fileType === 'csv') {
+            this.setState({csvFileToBeSent: event.target.files[0]})
+        }else if (fileType === 'json') {
+            this.setState({jsonFileToBeSent: event.target.files[0]})
+        }
 	};
 
     changeDGNameHandler = (event) => {
@@ -52,7 +55,7 @@ class DatasetFabrication extends Component {
             alert("You have not selected any fabrication variant!");
             return;
         }
-        if (this.state.fileToBeSent == null) {
+        if (this.state.csvFileToBeSent == null || this.state.jsonFileToBeSent == null ) {
             alert("You have not selected a file!");
             return;
         }
@@ -61,7 +64,8 @@ class DatasetFabrication extends Component {
             return;
         }
         const formData = new FormData();
-        formData.append("resource", this.state.fileToBeSent);
+        formData.append("resource", this.state.csvFileToBeSent);
+        formData.append("json_schema", this.state.jsonFileToBeSent);
         formData.append("dataset_group_name", this.state.datasetGroupName);
         if (this.state.selectedVariants.joinable && this.state.selectedVariants.joinable.selected) {
             if (this.state.selectedVariants.joinable.numberOfPairs === 0) {
@@ -148,13 +152,17 @@ class DatasetFabrication extends Component {
                 </Modal>
                 <div className={classes.selectFile}>
                     <div>
-                        <h5>Select a file:</h5>
+                        <h5>Provide input file information</h5>
                         <div className={classes.Textbox}>
                             <TextField id="filled-basic" variant="filled" label="Name of the dataset group"
                                        onChange={this.changeDGNameHandler}/>
                         </div>
+                        <h6>Select a csv file:</h6>
                         <input type="file" name="file" accept=".csv" title=""
-                               onChange={this.changeFileHandler} />
+                               onChange={(event) => this.changeFileHandler(event, 'csv')} />
+                        <h6>Select a json file specifying the schema:</h6>
+                        <input type="file" name="file" accept=".json" title=""
+                               onChange={(event) => this.changeFileHandler(event, 'json')} />
 		            </div>
                 </div>
                 <div className={classes.FabricationMethods}>

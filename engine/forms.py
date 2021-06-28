@@ -13,7 +13,8 @@ class UploadFileToMinioForm(BaseForm):
 
 
 class DatasetFabricationForm(BaseForm):
-    resource = FileField('file', validators=[DataRequired()])
+    resource = FileField('csv_file', validators=[DataRequired()])
+    json_schema = FileField('json_file', validators=[DataRequired()])
     dataset_group_name = StringField('dataset_group_name', validators=[DataRequired()])
     fabricate_joinable = BooleanField('fabricate_joinable', validators=[Optional()],
                                       default=False)

@@ -516,6 +516,7 @@ def valentine_get_fabricated_sample(dataset_id: str):
 
 @celery.task
 def create_fabricated_data(file_name: str,
+                           json_schema: dict,
                            dataset_group_name: str,
                            fabrication_variants: tuple[bool, bool, bool, bool],
                            fabrication_parameters: tuple[list[bool], list[bool], list[bool], list[bool]],
@@ -568,6 +569,7 @@ def valentine_fabricate_data():
         abort(400, form.errors)
     job_uuid: str = str(uuid.uuid4())
     uploaded_file = form.resource.data
+    uploaded_json_schema: dict = json.loads(form.json_schema.data.read())
     size = os.fstat(uploaded_file.fileno()).st_size
     if not minio_client.bucket_exists('tmp-folder'):
         minio_client.make_bucket('tmp-folder')
@@ -579,8 +581,8 @@ def valentine_fabricate_data():
                               form.view_unionable_specs.data, form.semantically_joinable_specs.data)
     fabrication_pairs = (form.joinable_pairs.data, form.unionable_pairs.data,
                          form.view_unionable_pairs.data, form.semantically_joinable_pairs.data)
-    create_fabricated_data.s(uploaded_file.filename, form.dataset_group_name.data, fabrication_variants,
-                             fabrication_parameters, fabrication_pairs).apply_async()
+    create_fabricated_data.s(uploaded_file.filename, uploaded_json_schema, form.dataset_group_name.data,
+                             fabrication_variants, fabrication_parameters, fabrication_pairs).apply_async()
 
     return jsonify(job_uuid)
 
