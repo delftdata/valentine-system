@@ -37,3 +37,4 @@ celery==4.4.7
 msgpack==1.0.2
 # flower
 flower==0.9.5
+unidecode==1.2.0

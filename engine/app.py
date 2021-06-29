@@ -17,11 +17,13 @@ from flask_cors import CORS
 from typing import List, Dict, Optional, Tuple, Iterator
 from itertools import product, combinations
 
+
 from more_itertools import unique_everseen
 from pandas.errors import EmptyDataError
 from redis import Redis
 from werkzeug.utils import secure_filename
 
+from engine.fabricator.dataset_generator import valentine_fabricator
 from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.base_source import GUIDMissing
@@ -528,13 +530,21 @@ def create_fabricated_data(file_name: str,
     joinable_specs, unionable_specs, view_unionable_specs, semantically_joinable_specs = fabrication_parameters
     joinable_pairs, unionable_pairs, view_unionable_pairs, semantically_joinable_pairs = fabrication_pairs
 
-    bucket_name = "FabricatedData"
+    bucket_name = "fabricated-data"
+
+
+    if not minio_client.bucket_exists(bucket_name):
+        minio_client.make_bucket(bucket_name)
 
     if fbr_joinable:
         app.logger.info(f"Fabricating Joinable data for: {file_name}")
         # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
         what_to_fabricate: list[bool] = joinable_specs
         pairs: int = joinable_pairs
+
+        valentine_fabricator('Joinable', what_to_fabricate, pairs, df, json_schema, file_name, minio_client, bucket_name)
+
+
 
     # example of storing data to minio
     # filename = ...
