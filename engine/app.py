@@ -29,7 +29,8 @@ from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.base_db import BaseDB
 from engine.data_sources.minio.minio_source import MinioSource
 from engine.data_sources.minio.minio_table import MinioTable
-from engine.data_sources.minio.minio_utils import get_pandas_df_from_minio_csv_file
+from engine.data_sources.minio.minio_utils import get_pandas_df_from_minio_csv_file, get_dict_from_minio_json_file, \
+    list_bucket_files
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
     MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
@@ -585,6 +586,22 @@ def valentine_fabricate_data():
                              fabrication_variants, fabrication_parameters, fabrication_pairs).apply_async()
 
     return jsonify(job_uuid)
+
+
+@celery.task
+def generate_boxplot_celery(results: dict):
+    for algorithm_name, result_paths in results.items():
+        for result_path in result_paths:
+            # This contains a single json file information
+            evaluation_result: dict = get_dict_from_minio_json_file(minio_client, 'valentine-results', result_path)
+
+
+@app.post('/valentine/generate_boxplot/<job_id>')
+def valentine_generate_boxplot(job_id: str):
+    folder_contents = list_bucket_files('valentine-results', minio_client)
+    results = folder_contents[job_id]
+    create_fabricated_data.s(results).apply_async()
+    return Response('Success', status=200)
 
 
 if __name__ != '__main__':
