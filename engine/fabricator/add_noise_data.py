@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import random
 import string
-from multiprocessing.pool import ThreadPool
 import unidecode
 
 letters = list(string.ascii_lowercase)
