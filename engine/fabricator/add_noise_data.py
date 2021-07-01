@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 import string
-import multiprocessing as mp
-from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
 import unidecode
 
 letters = list(string.ascii_lowercase)
@@ -128,8 +127,8 @@ def update_values(frame: pd.DataFrame, prc: int, approx_prc: int):
 
     rec_to_update = int(records_num * prc / 100)
 
-    pool = mp.Pool(processes=mp.cpu_count()-1)
-    output = dict(tqdm(pool.imap_unordered(sub_job, input_generator(frame, approx_prc))))
+    pool = ThreadPool(processes=2)
+    output = dict(pool.imap_unordered(sub_job, input_generator(frame, approx_prc)))
     srt = {b: i for i, b in enumerate(list(frame))}
     output = dict(sorted(output.items(), key=lambda t:srt[t[0]]))
     pool.close()
