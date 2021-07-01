@@ -45,6 +45,14 @@ class MinioPayload(BaseModel):
         arbitrary_types_allowed: bool = True
 
 
+class ValentineBenchmarkPayload(BaseModel):
+    dataset_name: str
+    algorithm_params: List[Dict[str, object]]
+
+    class Config:
+        arbitrary_types_allowed: bool = True
+
+
 class MinioBulkPayload(BaseModel):
     tables: List[Dict[str, str]]  # The tables in the format [{db_name: ..., table_name: ...}, ...]
     algorithms: List[Dict[str, Optional[Dict[str, object]]]]  # The algorithms to run [{#algorithm_name: {params dict}}]
@@ -77,6 +85,16 @@ def get_atlas_payload(request_json: dict) -> AtlasPayload:
     except ValidationError:
         abort(400, "Incorrect payload arguments. Make sure that they contain the correct atlas_url: str, "
                    "atlas_username: str, atlas_password: str, db_types: List[str] and matching_algorithm: str")
+    else:
+        return payload
+
+
+def get_valentine_benchmark_payload(request_json: dict) -> ValentineBenchmarkPayload:
+    try:
+        payload = ValentineBenchmarkPayload(**request_json)
+    except ValidationError:
+        abort(400, "Incorrect payload arguments. Make sure that they contain the correct dataset_name: str and "
+                   "algorithm_params: List[Dict[str, object]]")
     else:
         return payload
 

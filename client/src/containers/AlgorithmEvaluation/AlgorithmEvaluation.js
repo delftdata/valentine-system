@@ -7,14 +7,16 @@ import AlgorithmSelection from "./AlgorithmSelection/AlgorithmSelection";
 import Modal from "../../components/UI/Modal/Modal";
 import Spinner from "../../components/UI/Spinner/Spinner";
 import Response from "../../components/Forms/Response/Response";
+import axios from "axios";
 
 
 class AlgorithmEvaluation extends Component {
 
     state = {
+        selectedAlgorithms: [],
         selectedDataset: null,
         responseReceived: false,
-        latestResponse: "898adebc-5306-40ea-b257-429629b4bdf1",
+        latestResponse: '',
         loading: false
     }
 
@@ -27,7 +29,26 @@ class AlgorithmEvaluation extends Component {
     }
 
     sendJob = () => {
-        this.setState({responseReceived: true})
+        if (this.state.selectedAlgorithms.length === 0){
+            alert("You have not selected any algorithms for the benchmark!");
+            return;
+        }
+        if (this.state.selectedDataset == null){
+            alert("You have not selected any dataset for the benchmark!");
+            return;
+        }
+        const requestBody = {
+            "dataset_name": this.state.selectedDataset.name,
+            "algorithm_params": this.state.selectedAlgorithms
+        }
+        this.setState({loading: true});
+              axios({
+          method: "post",
+          url:  process.env.REACT_APP_SERVER_ADDRESS + "/valentine/submit_benchmark_job",
+          headers: {},
+          data: requestBody})
+            .then(response => {this.setState({loading: false, responseReceived: true, latestResponse: response.data});})
+            .catch(error => {this.setState( {loading: false} ); console.log(error);})
     }
 
     closeResponseHandler = () => {
@@ -35,7 +56,6 @@ class AlgorithmEvaluation extends Component {
     }
 
     render() {
-        console.log(this.state.selectedDataset)
         return (
             <Aux>
                 <Modal show={this.state.loading}>

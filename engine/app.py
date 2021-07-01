@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import uuid
 import logging
 import gzip
@@ -29,11 +30,16 @@ from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.base_db import BaseDB
 from engine.data_sources.minio.minio_source import MinioSource
 from engine.data_sources.minio.minio_table import MinioTable
-from engine.data_sources.minio.minio_utils import get_pandas_df_from_minio_csv_file, get_dict_from_minio_json_file, \
-    list_bucket_files
+from engine.data_sources.minio.minio_utils import get_pandas_df_from_minio_csv_file, list_bucket_files, \
+    get_dict_from_minio_json_file, store_dict_to_minio_as_json
+from engine.data_sources.valentine.golden_standard import GoldenStandardLoader
+from engine.data_sources.valentine.valentine_table import ValentineTable
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
-    MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
+    MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload, ValentineBenchmarkPayload, \
+    get_valentine_benchmark_payload
+from engine.data_sources.valentine.utils import BenchmarkFiles
+from engine.data_sources.valentine import metrics as valentine_metric_functions
 
 app = Flask(__name__)
 CORS(app)
@@ -72,6 +78,14 @@ minio_client: Minio = Minio('{host}:{port}'.format(host=os.environ['MINIO_HOST']
                             access_key=os.environ['MINIO_ACCESS_KEY'],
                             secret_key=os.environ['MINIO_SECRET_KEY'],
                             secure=False)
+
+
+VALENTINE_METRICS_TO_COMPUTE = {
+    "names": ["precision", "recall", "f1_score", "precision_at_n_percent", "recall_at_sizeof_ground_truth"],
+    "args": {
+        "n": [10, 20, 30, 40, 50, 60, 70, 80, 90]
+            }
+}
 
 
 @celery.task
@@ -602,6 +616,96 @@ def valentine_generate_boxplot(job_id: str):
     results = folder_contents[job_id]
     create_fabricated_data.s(results).apply_async()
     return Response('Success', status=200)
+
+
+@celery.task
+def run_single_benchmark_task(dataset_name: str,
+                              dataset_group_name: str,
+                              job_uuid: str,
+                              dataset_paths: list[str],
+                              matching_algorithm: str,
+                              algorithm_params: dict[str, object]):
+
+    matcher = get_matcher(matching_algorithm, algorithm_params)
+
+    file_paths = BenchmarkFiles(dataset_paths)
+
+    load = False if matching_algorithm in schema_only_algorithms else True
+
+    time_start_load = default_timer()
+
+    source_table: ValentineTable = ValentineTable(minio_client, file_paths.source_data, file_paths.source_schema,
+                                                  dataset_name + '_source', dataset_group_name, load_instances=load)
+    target_table: ValentineTable = ValentineTable(minio_client, file_paths.target_data, file_paths.target_schema,
+                                                  dataset_name + '_target', dataset_group_name, load_instances=load)
+
+    time_start_algorithm = default_timer()
+
+    matches = matcher.get_matches(source_table, target_table)
+
+    time_end = default_timer()
+
+    run_times = {"total_time": time_end - time_start_load, "algorithm_time": time_end - time_start_algorithm}
+
+    golden_standard = GoldenStandardLoader(get_dict_from_minio_json_file(minio_client, 'fabricated_data',
+                                                                         file_paths.golden_standard_path))
+
+    metric_fns = [getattr(valentine_metric_functions, met) for met in VALENTINE_METRICS_TO_COMPUTE['names']]
+    final_metrics = dict()
+
+    valentine_matches = {((match['source']['tbl_nm'], match['source']['clm_nm']),
+                          (match['target']['tbl_nm'], match['target']['clm_nm'])): match['sim'] for match in matches}
+
+    for metric in metric_fns:
+        if metric.__name__ != "precision_at_n_percent":
+            if metric.__name__ in ['precision', 'recall', 'f1_score'] and matching_algorithm != "Coma":
+                # Do not use the 1-1 match filter on Coma
+                final_metrics[metric.__name__] = metric(valentine_matches, golden_standard, True)
+            else:
+                final_metrics[metric.__name__] = metric(valentine_matches, golden_standard)
+        else:
+            for n in VALENTINE_METRICS_TO_COMPUTE['args']['n']:
+                final_metrics[metric.__name__.replace('_n_', '_' + str(n) + '_')] = metric(valentine_matches,
+                                                                                           golden_standard, n)
+    name = f'{dataset_name}__{matching_algorithm}{algorithm_params}'
+    valentine_matches = {str(k): v for k, v in valentine_matches.items()}
+    output = {"name": name, "matches": valentine_matches, "metrics": final_metrics, "run_times": run_times}
+    safe_dataset_name = re.sub('\\W+', '_', str(name))
+    file_path = f"{job_uuid}/{matching_algorithm}/{safe_dataset_name}.json"
+    store_dict_to_minio_as_json(minio_client, output, 'valentine-results', file_path)
+
+
+@app.post('/valentine/submit_benchmark_job')
+def valentine_submit_benchmark_job():
+    payload: ValentineBenchmarkPayload = get_valentine_benchmark_payload(request.json)
+    dataset_group_name = payload.dataset_name
+    bucket_folder_contents = list_bucket_files('fabricated_data', minio_client)
+    if dataset_group_name not in bucket_folder_contents:
+        abort(400, 'Dataset group does not exist')
+    job_uuid: str = str(uuid.uuid4())
+    dataset_folders = bucket_folder_contents[dataset_group_name]
+    algorithm_configs = payload.algorithm_params
+    for combination in product(dataset_folders.items(), algorithm_configs):
+        dataset, algorithm_config = combination
+        dataset_name, dataset_paths = dataset
+        algorithm_name = list(algorithm_config.keys())[0]
+        algorithm_params = list(algorithm_config.values())[0]
+        run_single_benchmark_task.s(dataset_name, dataset_group_name, job_uuid,
+                                    dataset_paths, algorithm_name, algorithm_params).apply_async()
+
+    return jsonify(job_uuid)
+
+
+@app.get('/valentine/get_fabricated_datasets')
+def valentine_get_fabricated_datasets():
+    fabricated_data = [x.object_name[:-1] for x in minio_client.list_objects('fabricated_data')]
+    return jsonify(fabricated_data)
+
+
+@app.get('/minio/get_bucket_files/<bucket_name>')
+def minio_get_bucket_files(bucket_name: str):
+    folder_contents = list_bucket_files(bucket_name, minio_client)
+    return jsonify(folder_contents)
 
 
 if __name__ != '__main__':

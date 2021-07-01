@@ -82,3 +82,13 @@ def list_bucket_files(bucket_name: str, minio_client: Minio) -> dict[str, dict[s
         else:
             folders[root_folder] = {folder: [file.object_name]}
     return folders
+
+
+def store_dict_to_minio_as_json(minio_client: Minio, d: dict, bucket_name: str, file_name: str):
+    output = json.dumps(d, indent=2).encode('utf-8')
+    minio_client.put_object(
+        bucket_name=bucket_name,
+        object_name=file_name,
+        data=BytesIO(output),
+        length=len(output)
+    )

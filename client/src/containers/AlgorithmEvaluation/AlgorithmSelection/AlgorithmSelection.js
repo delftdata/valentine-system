@@ -141,7 +141,7 @@ class AlgorithmSelection extends Component {
                 show: true
              },
             CorrelationClustering_threshold1: {
-                name: "Phase 1 threshold",
+                name: "threshold1",
                 elementType: "input",
                 elementConfig : {
                     min: 0.0,
@@ -153,7 +153,7 @@ class AlgorithmSelection extends Component {
                 show: false
             },
             CorrelationClustering_threshold2: {
-                name: "Phase 2 threshold",
+                name: "threshold2",
                 elementType: "input",
                 elementConfig : {
                     min: 0.0,
@@ -190,15 +190,9 @@ class AlgorithmSelection extends Component {
                 show: true
             },
             JaccardLevenMatcher_threshold_leven: {
-                name: "th_leven",
+                name: "threshold_leven",
                 elementType: "input",
-                elementConfig : {
-                    min: 0.0,
-                    max: 1.0,
-                    step: 0.01,
-                    defaultValue: 0.8
-                },
-                value: "",
+                value: 0.8,
                 show: false
             }
         },
@@ -216,20 +210,20 @@ class AlgorithmSelection extends Component {
             }
         },
         algorithmParams: {
-            "Coma": {},
-            "Cupid": {},
-            "SimilarityFlooding": {},
-            "CorrelationClustering": {},
-            "JaccardLevenMatcher": {},
-            "EmbDI": {}
+            Coma: {max_n: 0, strategy: "COMA_OPT"},
+            Cupid: {leaf_w_struct: 0.2, w_struct: 0.2, th_accept: 0.7, th_high: 0.6, th_low:0.35, th_ns: 0.7},
+            SimilarityFlooding: {},
+            CorrelationClustering: {threshold1: 0.15, threshold2: 0.15, quantiles: 256},
+            JaccardLevenMatcher: {threshold_leven: 0.8},
+            EmbDI: {}
         },
         isSelected:{
-            "Coma": false,
-            "Cupid": false,
-            "SimilarityFlooding": false,
-            "CorrelationClustering": false,
-            "JaccardLevenMatcher": false,
-            "EmbDI": false
+            Coma: false,
+            Cupid: false,
+            SimilarityFlooding: false,
+            CorrelationClustering: false,
+            JaccardLevenMatcher: false,
+            EmbDI: false
         }
     }
 
@@ -243,17 +237,20 @@ class AlgorithmSelection extends Component {
                     }
                 }
             }
+            const localAlgorithmParams = {...this.state.algorithmParams};
+            localAlgorithmParams[algorithmName] = algoParams;
+            this.setState({algorithmParams: localAlgorithmParams}, () => this.sendSelectedToParent());
+        }else{
+             this.sendSelectedToParent();
         }
-        const localAlgorithmParams = {...this.state.algorithmParams};
-        localAlgorithmParams[algorithmName] = algoParams;
-        this.setState({algorithmParams: localAlgorithmParams}, () => this.sendSelectedToParent());
     }
 
     sendSelectedToParent = () => {
         const selectedAlgorithms = [];
          for (let algorithmName in this.state.isSelected) {
              if(this.state.isSelected[algorithmName]){
-                 selectedAlgorithms.push({[algorithmName]: this.state.algorithmParams[algorithmName]});
+                 let selectedAlgorithm = {[algorithmName]: this.state.algorithmParams[algorithmName]};
+                 selectedAlgorithms.push(selectedAlgorithm);
              }
          }
         this.props.sendSelected(selectedAlgorithms);
