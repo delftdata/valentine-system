@@ -127,11 +127,13 @@ def update_values(frame: pd.DataFrame, prc: int, approx_prc: int):
 
     rec_to_update = int(records_num * prc / 100)
 
-    pool = ThreadPool(processes=2)
-    output = dict(pool.imap_unordered(sub_job, input_generator(frame, approx_prc)))
+    list_tups = []
+    for col in list(frame):
+        tup = sub_job((col, frame[col].tolist(), approx_prc, str(frame[col].dtype)))
+        list_tups.append(tup)
+    output = dict(list_tups)
     srt = {b: i for i, b in enumerate(list(frame))}
     output = dict(sorted(output.items(), key=lambda t:srt[t[0]]))
-    pool.close()
     pert_pd = pd.DataFrame.from_dict(output)
     return pert_pd
 
