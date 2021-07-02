@@ -234,6 +234,8 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
 
     if scenario == 'Joinable':
 
+        columns = [0.0,0.3,0.5,0.7]
+
         pairs_ver = no_pairs // 2
         pairs_both = no_pairs - pairs_ver
 
@@ -289,6 +291,8 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                 write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
     elif scenario == 'Semantically-Joinable':
+
+        columns = [0.0,0.3,0.5,0.7]
 
         pairs_ver = no_pairs // 2
         pairs_both = no_pairs - pairs_ver
