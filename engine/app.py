@@ -37,7 +37,7 @@ from engine.data_sources.valentine.valentine_table import ValentineTable
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
     MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload, ValentineBenchmarkPayload, \
-    get_valentine_benchmark_payload
+    get_valentine_benchmark_payload, get_params_from_str_input
 from engine.data_sources.valentine.utils import BenchmarkFiles
 from engine.data_sources.valentine import metrics as valentine_metric_functions
 
@@ -626,6 +626,9 @@ def run_single_benchmark_task(dataset_name: str,
                               matching_algorithm: str,
                               algorithm_params: dict[str, object]):
 
+    if matching_algorithm == 'EmbDI':   # EmbDI is not integrated to the system yet
+        return
+
     matcher = get_matcher(matching_algorithm, algorithm_params)
 
     file_paths = BenchmarkFiles(dataset_paths)
@@ -689,10 +692,18 @@ def valentine_submit_benchmark_job():
         dataset, algorithm_config = combination
         dataset_name, dataset_paths = dataset
         algorithm_name = list(algorithm_config.keys())[0]
-        algorithm_params = list(algorithm_config.values())[0]
-        run_single_benchmark_task.s(dataset_name, dataset_group_name, job_uuid,
-                                    dataset_paths, algorithm_name, algorithm_params).apply_async()
-
+        algorithm_params: dict = list(algorithm_config.values())[0]
+        processed_params: dict = {}
+        for param_name, param_values in algorithm_params.items():
+            processed_params[param_name] = get_params_from_str_input(param_values)
+        for params in product(*processed_params.values()):
+            single_algorithm_params: dict[str, object] = dict(zip(processed_params.keys(), params))
+            app.logger.info(f" Sending benchmarking job for -> | "
+                            f"Dataset: {dataset_name} | "
+                            f"Algorithm: {algorithm_name} | "
+                            f"Algorithm parameters: {single_algorithm_params}")
+            run_single_benchmark_task.s(dataset_name, dataset_group_name, job_uuid,
+                                        dataset_paths, algorithm_name, single_algorithm_params).apply_async()
     return jsonify(job_uuid)
 
 

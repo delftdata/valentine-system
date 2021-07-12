@@ -140,3 +140,49 @@ def get_atlas_source(payload: AtlasPayload) -> AtlasSource:
 
 def get_matcher(name, args) -> BaseMatcher:
     return getattr(module_algorithms, name)() if args is None else getattr(module_algorithms, name)(**dict(args))
+
+
+def string_is_int(string: str) -> bool:
+    try:
+        _ = int(string)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def get_ranged_params(splitted: list[str]):
+    values = []
+    start, step, end = splitted
+    if string_is_int(start) and string_is_int(start) and string_is_int(start):
+        start, step, end = int(start), int(step), int(end)
+    else:
+        start, step, end = float(start), float(step), float(end)
+    tmp = start
+    while tmp <= end:
+        values.append(tmp)
+        tmp += step
+    return values
+
+
+def get_params_from_str_input(str_input: str):
+    try:
+        p_variants = str_input.split(',')
+
+        values = []
+        for variant in p_variants:
+            if variant.lower().islower():
+                values.append(variant)
+            else:
+                splitted = variant.split(':')
+                if len(splitted) > 1:
+                    values.extend(get_ranged_params(splitted))
+                else:
+                    if string_is_int(variant):
+                        values.append(int(variant))
+                    else:
+                        values.append(float(variant))
+    except ValueError:
+        abort(400, 'Invalid parameter input string')
+    else:
+        return values

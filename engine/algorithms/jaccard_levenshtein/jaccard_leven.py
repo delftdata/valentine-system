@@ -30,8 +30,8 @@ class JaccardLevenMatcher(BaseMatcher):
         process_num : int, optional
             Te number of processes to spawn
         """
-        self.threshold_leven = threshold_leven
-        self.process_num = process_num
+        self.threshold_leven = float(threshold_leven)
+        self.process_num = int(process_num)
 
     def get_matches(self, source_input: Union[BaseDB, BaseTable], target_input: Union[BaseDB, BaseTable]):
         source_id = source_input.db_belongs_uid if isinstance(source_input, BaseTable) \

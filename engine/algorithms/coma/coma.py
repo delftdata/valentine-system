@@ -16,7 +16,7 @@ from ...utils.utils import create_folder, get_project_root, delete_file
 class Coma(BaseMatcher):
 
     def __init__(self, max_n: int = 0, strategy: str = "COMA_OPT"):
-        self.max_n = max_n
+        self.max_n = int(max_n)
         self.strategy = strategy
         self.source_guid = None
         self.target_guid = None
