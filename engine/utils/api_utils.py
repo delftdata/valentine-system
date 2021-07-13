@@ -184,5 +184,7 @@ def get_params_from_str_input(str_input: str):
                         values.append(float(variant))
     except ValueError:
         abort(400, 'Invalid parameter input string')
+    except AttributeError:
+        return [str_input]
     else:
         return values

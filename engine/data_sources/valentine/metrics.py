@@ -201,3 +201,34 @@ def recall_at_sizeof_ground_truth(matches: dict, golden_standard: GoldenStandard
     if tp + fn == 0:
         return 0
     return tp / (tp + fn)
+
+
+def create_spurious_result_dict(match: frozenset, matches: dict, result_type: str):
+    t = tuple(match)
+    inv_t = (t[1], t[0])
+    if t in matches:
+        similarity = matches[t]
+    elif inv_t in matches:
+        similarity = matches[inv_t]
+    else:
+        similarity = 0
+    left_table: str = list(match)[0][0]
+    if left_table.endswith('source'):
+        clm_1 = list(match)[0][1]
+        clm_2 = list(match)[1][1]
+    else:
+        clm_1 = list(match)[1][1]
+        clm_2 = list(match)[0][1]
+    return {'Column 1': clm_1, 'Column 2': clm_2, 'Similarity': similarity, 'Type': result_type}
+
+
+def get_spurious_results_at_sizeof_ground_truth(matches: dict, golden_standard: GoldenStandardLoader):
+    matches_at_sizeof_ground_truth = list(map(lambda m: frozenset(m), list(matches.keys())))[:golden_standard.size]
+    spurious_results = []
+    for expected_match in golden_standard.expected_matches:
+        if expected_match not in matches_at_sizeof_ground_truth:
+            spurious_results.append(create_spurious_result_dict(expected_match, matches, 'False Negative'))
+    for detected_match in matches_at_sizeof_ground_truth:
+        if detected_match not in golden_standard.expected_matches:
+            spurious_results.append(create_spurious_result_dict(detected_match, matches, 'False Positive'))
+    return spurious_results
