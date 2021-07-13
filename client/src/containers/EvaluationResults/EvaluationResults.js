@@ -35,6 +35,7 @@ class EvaluationResults extends Component {
         rowsPerPage: 5,
         loading: false,
         showPlot: false,
+        job_id: '264c73fe-53a8-43b7-a837-c3d0c6b7373a'
     }
 
     componentDidMount() {
@@ -48,10 +49,24 @@ class EvaluationResults extends Component {
             this.setState({loading: false});
             console.log(err);
         })
+
+
     }
 
     displayBoxplot = (fabricatedPairId) => {
         this.setState({showPlot: true});
+
+         axios({
+             method: "get",
+             url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/download_boxplots/" + this.state.job_id
+        }).then(res => {
+            console.log(res);
+            this.setState({loading: false});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
+
     }
 
     closeShowDataHandler = () => {
@@ -88,7 +103,7 @@ class EvaluationResults extends Component {
                                     this.state.page * this.state.rowsPerPage + this.state.rowsPerPage)
                                     .map((datasetId) => {
                                         return (<div className={classes.Result}>
-                                            <p className={classes.Paragraph}>Job: 264c73fe-53a8-43b7-a837-c3d0c6b7373a</p>
+                                            <p className={classes.Paragraph}>Job: {this.state.job_id}</p>
                                             <p className={classes.Paragraph}>Dataset group: {datasetId}</p>
                                             <Button
                                                 style={{

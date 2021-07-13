@@ -37,3 +37,8 @@ celery==4.4.7
 msgpack==1.0.2
 # flower
 flower==0.9.5
+# plots
+seaborn==0.10.1
+matplotlib
+Pillow
+

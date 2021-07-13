@@ -17,12 +17,14 @@ services:
     image: dev/schema-matching-engine:latest
     ports:
       - 5000:5000
+    volumes:
+      - ./engine:/usr/local/schema-matching-system/engine
     env_file:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
     restart: always
-    command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1
+    command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1 --reload
 
   # S3-like object store holding the data that we want to match
   minio:
@@ -64,18 +66,18 @@ services:
       - 15672:15672
 
   # Celery Flower dashboard
-  celery-flower:
-    build: ./engine
-    image: dev/schema-matching-engine:latest
-    command: "celery flower -A app.celery flower --broker_api=http://rabbitmq:rabbitmq@celery-rabbitmq:15672/api/"
-    restart: always
-    environment:
-      - FLOWER_PORT=5555
-    env_file:
-      - env_files/redis.env
-      - env_files/minio.env
-      - env_files/rabbitmq.env
-    ports:
-      - 5555:5555
-    depends_on:
-      - celery-worker
+#  celery-flower:
+#    build: ./engine
+#    image: dev/schema-matching-engine:latest
+#    command: "celery flower -A app.celery flower --broker_api=http://rabbitmq:rabbitmq@celery-rabbitmq:15672/api/"
+#    restart: always
+#    environment:
+#      - FLOWER_PORT=5555
+#    env_file:
+#      - env_files/redis.env
+#      - env_files/minio.env
+#      - env_files/rabbitmq.env
+#    ports:
+#      - 5555:5555
+#    depends_on:
+#      - celery-worker

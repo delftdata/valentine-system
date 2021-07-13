@@ -71,9 +71,9 @@ def list_bucket_files(bucket_name: str, minio_client: Minio) -> dict[str, dict[s
     bucket_files = minio_client.list_objects(bucket_name, recursive=True)
     folders: dict[str, dict[str, list[str]]] = {}
     for file in bucket_files:
-        splitted_file_path: list[str] = file.object_name.split('/')
-        root_folder: str = splitted_file_path[0]
-        folder: str = splitted_file_path[1]
+        split_file_path: list[str] = file.object_name.split('/')
+        root_folder: str = split_file_path[0]
+        folder: str = split_file_path[1]
         if root_folder in folders:
             if folder in folders[root_folder]:
                 folders[root_folder][folder].append(file.object_name)
