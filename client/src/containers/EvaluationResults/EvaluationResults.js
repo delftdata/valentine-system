@@ -55,18 +55,6 @@ class EvaluationResults extends Component {
 
     displayBoxplot = (fabricatedPairId) => {
         this.setState({showPlot: true});
-
-         axios({
-             method: "get",
-             url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/download_boxplots/" + this.state.job_id
-        }).then(res => {
-            console.log(res);
-            this.setState({loading: false});
-        }).catch(err => {
-            this.setState({loading: false});
-            console.log(err);
-        })
-
     }
 
     closeShowDataHandler = () => {
