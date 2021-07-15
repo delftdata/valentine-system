@@ -1,0 +1,108 @@
+{
+	"config": [
+	{
+		"problem": "Unionable",
+		"split": [
+			{
+				"columns": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI"],
+				"type": "TypeOfValues",
+				"drop_alg": ["COMA-S", "Cupid", "SimilarityFlooding", "SemProp", "EmbDI"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["COMA-S", "Cupid", "SimilarityFlooding"],
+				"type": "ColumnNames",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "EmbDI", "SemProp"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["SemProp", "EmbDI"],
+				"type": "Both",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "COMA-S", "Cupid", "SimilarityFlooding"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			}
+		]
+	},
+	{
+		"problem": "View-Unionable",
+		"split": [
+			{
+				"columns": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI"],
+				"type": "TypeOfValues",
+				"drop_alg": ["COMA-S", "Cupid", "SimilarityFlooding", "SemProp", "EmbDI"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["COMA-S", "Cupid", "SimilarityFlooding"],
+				"type": "ColumnNames",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "EmbDI", "SemProp"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["SemProp", "EmbDI"],
+				"type": "Both",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "COMA-S", "Cupid", "SimilarityFlooding"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			}
+		]
+	},
+	{
+		"problem": "Joinable",
+		"split": [
+			{
+				"columns": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI"],
+				"type": "TypeOfValues",
+				"drop_alg": ["COMA-S", "Cupid", "SimilarityFlooding", "SemProp", "EmbDI"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["COMA-S", "Cupid", "SimilarityFlooding"],
+				"type": "ColumnNames",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "EmbDI", "SemProp"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["SemProp", "EmbDI"],
+				"type": "Both",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "COMA-S", "Cupid", "SimilarityFlooding"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			}
+		]
+	},
+	{
+		"problem": "Semantically-Joinable",
+		"split": [
+			{
+				"columns": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI"],
+				"type": "TypeOfValues",
+				"drop_alg": ["COMA-S", "Cupid", "SimilarityFlooding", "SemProp", "EmbDI"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["COMA-S", "Cupid", "SimilarityFlooding"],
+				"type": "ColumnNames",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "EmbDI", "SemProp"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			},
+			{
+				"columns": ["SemProp", "EmbDI"],
+				"type": "Both",
+				"drop_alg": ["DistributionBased", "JaccardLevenMatcher", "COMA-SI", "COMA-S", "Cupid", "SimilarityFlooding"],
+				"drop": ["Category", "SplitMethod", "HorizontalOverlap", "VerticalOverlap",
+					"ColumnNames", "Dataset", "TypeOfValues"]
+			}
+		]
+	}
+	]
+}
