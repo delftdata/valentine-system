@@ -96,7 +96,7 @@ class DatasetFabrication extends Component {
             formData.append("unionable_specs-0", nInstances)
             formData.append("unionable_specs-1", nSchemata)
             formData.append("unionable_specs-2", vInstances)
-            formData.append("sunionable_specs-3", vSchemata)
+            formData.append("unionable_specs-3", vSchemata)
             formData.append("unionable_pairs", this.state.selectedVariants.unionable.numberOfPairs)
         }
         if (this.state.selectedVariants.semanticallyJoinable && this.state.selectedVariants.semanticallyJoinable.selected) {

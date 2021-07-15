@@ -18,11 +18,13 @@ from flask_cors import CORS
 from typing import List, Dict, Optional, Tuple, Iterator
 from itertools import product, combinations
 
+
 from more_itertools import unique_everseen
 from pandas.errors import EmptyDataError
 from redis import Redis
 from werkzeug.utils import secure_filename
 
+from engine.fabricator.dataset_generator import valentine_fabricator
 from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.base_source import GUIDMissing
@@ -541,13 +543,16 @@ def create_fabricated_data(file_name: str,
                            fabrication_parameters: tuple[list[bool], list[bool], list[bool], list[bool]],
                            fabrication_pairs: tuple[int, int, int, int]):
 
-    df = get_pandas_df_from_minio_csv_file(minio_client, 'tmp-folder', file_name)  # the loaded csv file
+    df = get_pandas_df_from_minio_csv_file(minio_client, 'tmp-folder', file_name, 1, None)  # the loaded csv file
 
     fbr_joinable, fbr_unionable, fbr_view_unionable, fbr_semantically_joinable = fabrication_variants
     joinable_specs, unionable_specs, view_unionable_specs, semantically_joinable_specs = fabrication_parameters
     joinable_pairs, unionable_pairs, view_unionable_pairs, semantically_joinable_pairs = fabrication_pairs
 
-    bucket_name = "FabricatedData"
+    bucket_name = "fabricated-data"
+
+    if not minio_client.bucket_exists(bucket_name):
+        minio_client.make_bucket(bucket_name)
 
     if fbr_joinable:
         app.logger.info(f"Fabricating Joinable data for: {file_name}")
@@ -555,10 +560,8 @@ def create_fabricated_data(file_name: str,
         what_to_fabricate: list[bool] = joinable_specs
         pairs: int = joinable_pairs
 
-    # example of storing data to minio
-    # filename = ...
-    # file = ...
-    # minio_client.fput_object(bucket_name, filename, file)
+        valentine_fabricator('Joinable', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
 
     if fbr_unionable:
         app.logger.info(f"Fabricating Unionable data for: {file_name}")
@@ -566,17 +569,26 @@ def create_fabricated_data(file_name: str,
         what_to_fabricate: list[bool] = unionable_specs
         pairs: int = unionable_pairs
 
+        valentine_fabricator('Unionable', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
+
     if fbr_view_unionable:
         app.logger.info(f"Fabricating View Unionable data for: {file_name}")
         # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
         what_to_fabricate: list[bool] = view_unionable_specs
         pairs: int = view_unionable_pairs
 
+        valentine_fabricator('View-Unionablle', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
+
     if fbr_semantically_joinable:
         app.logger.info(f"Fabricating Semantically Joinable data for: {file_name}")
         # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
         what_to_fabricate: list[bool] = semantically_joinable_specs
         pairs: int = semantically_joinable_pairs
+
+        valentine_fabricator('Semantically-Joinable', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
 
     minio_client.remove_object('tmp-folder', file_name)
 
