@@ -4,7 +4,7 @@ import random
 import copy
 
 
-def split(source: Dataset, overlap: float, rand: bool, approx: bool, prc: int, approx_prc: int):
+def split(source: Dataset, overlap: float, rand: bool, approx: bool, approx_prc: int = 0):
     records_num, col_num = source.data.shape
     half = int(records_num/2)
     target1_data = source.data.iloc[:half]
@@ -13,12 +13,12 @@ def split(source: Dataset, overlap: float, rand: bool, approx: bool, prc: int, a
     if rand:
         tmp = target2_data.iloc[random.sample(range(half), int(overlap * half))]
         if approx:
-            tmp = update_values(tmp, prc, approx_prc)
+            tmp = update_values(tmp, approx_prc)
         target1_data = target1_data.append(tmp)
     else:
         tmp = target2_data.iloc[:int(overlap * half)]
         if approx:
-            tmp = update_values(tmp, prc, approx_prc)
+            tmp = update_values(tmp, approx_prc)
         target1_data = target1_data.append(tmp)
 
     common_columns = source.schema.keys()

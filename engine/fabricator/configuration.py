@@ -38,4 +38,3 @@ class Configuration:
         self.approx_prc = int(cfg['Approximation']['approx_percentage'])
         self.approx_columns = str_to_bool(cfg['Approximation']['approx_columns'])
         self.approx_columns_type = int(cfg['Approximation']['approx_columns_type'])
-

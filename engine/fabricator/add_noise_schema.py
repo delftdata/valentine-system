@@ -3,14 +3,15 @@ from .dataset import Dataset
 import random
 import math
 
+
 def abbreviate(name: str):
     abbreviation = []
     name = ''.join([w[0].upper()+w[1:] for w in name.split(' ')])
     words = name.split('_')
     if len(words) != 1:
         for w in words:
-            if len(w)>=1:
-                bound = random.randint(math.ceil(len(w)/4),math.ceil(len(w)/2))
+            if len(w) >= 1:
+                bound = random.randint(math.ceil(len(w)/4), math.ceil(len(w)/2))
             else:
                 bound = 1
             abbreviation += w[:bound]
@@ -22,7 +23,7 @@ def abbreviate(name: str):
         if len(capitals) >= 1:
             for c in capitals:
                 if len(c) > 1:
-                    bound = random.randint(math.ceil(len(c)/4),math.ceil(len(c)/2))
+                    bound = random.randint(math.ceil(len(c)/4), math.ceil(len(c)/2))
                 else:
                     bound = 1
                 abbreviation += [c[:bound]]
@@ -30,24 +31,27 @@ def abbreviate(name: str):
 
     return abbreviation
 
+
 def augment(name: str, table_name: str):
-    if(len(name.split(' '))>1):
-        name = ''.join([w[0].upper() + w[1:] if len(w)>1 else w[0].upper() for w in name.split(' ')])
+    if len(name.split(' ')) > 1:
+        name = ''.join([w[0].upper() + w[1:] if len(w) > 1 else w[0].upper() for w in name.split(' ')])
     return table_name.split('_')[0]+'_'+name
+
 
 def drop_vowels(word: str):
     word = ''.join([w[0].upper() + w[1:] if len(w) > 1 else w[0].upper() for w in word.split(' ')])
     table = str.maketrans(dict.fromkeys('aeiouyAEIOUY'))
     return word.translate(table).lower()
 
+
 def approximate_column_names(dataset: Dataset, table_name: str, choice: int):
     schema = dataset.schema
-    columns =[]
+    columns = []
 
     for i in schema.keys():
         columns.append(schema[i][0])
 
-    new_columns =[]
+    new_columns = []
 
     if choice == 1:
         for col in columns:
@@ -97,4 +101,4 @@ def approximate_column_names(dataset: Dataset, table_name: str, choice: int):
         schema[i][0] = new_columns[count]
         count += 1
 
-    return Dataset(schema,dataset.data)
+    return Dataset(schema, dataset.data)
