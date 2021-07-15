@@ -1,4 +1,6 @@
 import csv
+import json
+
 import chardet
 from minio import Minio
 from io import BytesIO
@@ -53,7 +55,31 @@ def get_column_sample_from_minio_csv_file(minio_client: Minio, bucket_name: str,
     return sample
 
 
+def get_dict_from_minio_json_file(minio_client: Minio, bucket_name: str, object_path: str) -> dict:
+    obj_size = minio_client.stat_object(bucket_name, object_path).size
+    data = list(minio_client.get_object(bucket_name, object_path).stream(obj_size))[0]
+    python_dict = json.load(BytesIO(data))
+    return python_dict
+
+
 def correct_file_ending(file_name: str):
     if file_name.endswith(".csv"):
         return file_name
     return file_name + ".csv"
+
+
+def list_bucket_files(bucket_name: str, minio_client: Minio) -> dict[str, dict[str, list[str]]]:
+    bucket_files = minio_client.list_objects(bucket_name, recursive=True)
+    folders: dict[str, dict[str, list[str]]] = {}
+    for file in bucket_files:
+        split_file_path: list[str] = file.object_name.split('/')
+        root_folder: str = split_file_path[0]
+        folder: str = split_file_path[1]
+        if root_folder in folders:
+            if folder in folders[root_folder]:
+                folders[root_folder][folder].append(file.object_name)
+            else:
+                folders[root_folder][folder] = [file.object_name]
+        else:
+            folders[root_folder] = {folder: [file.object_name]}
+    return folders
