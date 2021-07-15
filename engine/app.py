@@ -1,7 +1,6 @@
 import base64
 import json
 import os
-import sys
 import uuid
 import logging
 import gzip
@@ -10,7 +9,6 @@ from os import path
 from tempfile import gettempdir
 from time import sleep
 from timeit import default_timer
-from PIL import Image
 
 from celery import Celery, chord
 from minio import Minio
@@ -37,7 +35,7 @@ from engine.data_sources.minio.minio_utils import get_pandas_df_from_minio_csv_f
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
     MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
-from engine.utils.ValentinePlots import ValentinePlots
+from engine.utils.valentine_plots import ValentinePlots
 
 app = Flask(__name__)
 CORS(app)
@@ -470,13 +468,12 @@ def valentine_download_boxplots(job_id: str):
     data = list()
     plots = results.keys()
     for plot in plots:
-        obj_size = minio_client.stat_object(f'valentine-plots', results[plot][0]).size
-        img = BytesIO(list(minio_client.get_object(f'valentine-plots', results[plot][0]).stream(obj_size))[0])
+        obj_size = minio_client.stat_object('valentine-plots', results[plot][0]).size
+        img = BytesIO(list(minio_client.get_object('valentine-plots', results[plot][0]).stream(obj_size))[0])
         encoded_img = base64.encodebytes(img.getvalue()).decode()
         data.append(encoded_img)
 
     return jsonify({'result': data})
-    # return Response("Success", status=200)
 
 
 @app.route('/valentine/upload_dataset', methods=['POST'])
@@ -615,7 +612,7 @@ def generate_boxplot_celery(results: dict, job_id: str):
 
     for algorithm_name, result_paths in results.items():
         for result_path in result_paths:
-            split_path = result_path.split('/')
+            split_path = result_path.split(os.path.sep)
             filename = split_path[len(split_path) - 1].split('.')[:-1][0]
 
             # This contains a single json file information
@@ -650,4 +647,4 @@ if __name__ != '__main__':
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

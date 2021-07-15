@@ -53,4 +53,4 @@ EXPOSE 5000
 
 USER flask
 
-CMD gunicorn -b 0.0.0.0:5000 app:app --reload
+CMD gunicorn -b 0.0.0.0:5000 app:app
