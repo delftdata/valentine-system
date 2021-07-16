@@ -26,11 +26,12 @@ def get_columns_from_minio_csv_file(minio_client: Minio, bucket_name: str, objec
     return pd.read_csv(BytesIO(list(data.stream(32 * 1024))[0]), nrows=0).columns.tolist()
 
 
-def get_pandas_df_from_minio_csv_file(minio_client: Minio, bucket_name: str, object_name: str):
+def get_pandas_df_from_minio_csv_file(minio_client: Minio, bucket_name: str, object_name: str, skiprows=None, header='infer'):
     obj_size = minio_client.stat_object(bucket_name, object_name).size
     data = list(minio_client.get_object(bucket_name, object_name).stream(obj_size))[0]
     return pd.read_csv(BytesIO(data),
                        index_col=False,
+                       skiprows=skiprows, header=header,
                        encoding=get_in_memory_encoding(data[:16 * 1024]),
                        sep=get_in_memory_delimiter(data[:16 * 1024]),
                        on_bad_lines='warn')
@@ -71,9 +72,9 @@ def list_bucket_files(bucket_name: str, minio_client: Minio) -> dict[str, dict[s
     bucket_files = minio_client.list_objects(bucket_name, recursive=True)
     folders: dict[str, dict[str, list[str]]] = {}
     for file in bucket_files:
-        splitted_file_path: list[str] = file.object_name.split('/')
-        root_folder: str = splitted_file_path[0]
-        folder: str = splitted_file_path[1]
+        split_file_path: list[str] = file.object_name.split('/')
+        root_folder: str = split_file_path[0]
+        folder: str = split_file_path[1]
         if root_folder in folders:
             if folder in folders[root_folder]:
                 folders[root_folder][folder].append(file.object_name)

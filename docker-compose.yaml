@@ -17,12 +17,14 @@ services:
     image: dev/schema-matching-engine:latest
     ports:
       - 5000:5000
+    volumes:
+      - ./engine:/usr/local/schema-matching-system/engine
     env_file:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
     restart: always
-    command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1
+    command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1 --reload
 
   # S3-like object store holding the data that we want to match
   minio:

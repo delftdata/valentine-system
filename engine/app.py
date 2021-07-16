@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import re
@@ -18,11 +19,13 @@ from flask_cors import CORS
 from typing import List, Dict, Optional, Tuple, Iterator
 from itertools import product, combinations
 
+
 from more_itertools import unique_everseen
 from pandas.errors import EmptyDataError
 from redis import Redis
 from werkzeug.utils import secure_filename
 
+from engine.fabricator.dataset_generator import valentine_fabricator
 from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.base_source import GUIDMissing
@@ -36,10 +39,14 @@ from engine.data_sources.valentine.golden_standard import GoldenStandardLoader
 from engine.data_sources.valentine.valentine_table import ValentineTable
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
+ integrate-valentine-benchmark
     MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload, ValentineBenchmarkPayload, \
     get_valentine_benchmark_payload, get_params_from_str_input
 from engine.data_sources.valentine.utils import BenchmarkFiles
 from engine.data_sources.valentine import metrics as valentine_metric_functions
+    MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
+from engine.utils.valentine_plots import ValentinePlots
+
 
 app = Flask(__name__)
 CORS(app)
@@ -473,6 +480,22 @@ def valentine_download_fabricated_dataset(dataset_id: str):
                                    }, status=200)
 
 
+@app.route('/valentine/results/download_boxplots/<job_id>', methods=['GET'])
+def valentine_download_boxplots(job_id: str):
+    folder_contents = list_bucket_files('valentine-plots', minio_client)
+    results = folder_contents[job_id]
+
+    data = list()
+    plots = results.keys()
+    for plot in plots:
+        obj_size = minio_client.stat_object('valentine-plots', results[plot][0]).size
+        img = BytesIO(list(minio_client.get_object('valentine-plots', results[plot][0]).stream(obj_size))[0])
+        encoded_img = base64.encodebytes(img.getvalue()).decode()
+        data.append(encoded_img)
+
+    return jsonify({'result': data})
+
+
 @app.route('/valentine/upload_dataset', methods=['POST'])
 def valentine_upload_dataset():
     try:
@@ -538,13 +561,16 @@ def create_fabricated_data(file_name: str,
                            fabrication_parameters: tuple[list[bool], list[bool], list[bool], list[bool]],
                            fabrication_pairs: tuple[int, int, int, int]):
 
-    df = get_pandas_df_from_minio_csv_file(minio_client, 'tmp-folder', file_name)  # the loaded csv file
+    df = get_pandas_df_from_minio_csv_file(minio_client, 'tmp-folder', file_name, 1, None)  # the loaded csv file
 
     fbr_joinable, fbr_unionable, fbr_view_unionable, fbr_semantically_joinable = fabrication_variants
     joinable_specs, unionable_specs, view_unionable_specs, semantically_joinable_specs = fabrication_parameters
     joinable_pairs, unionable_pairs, view_unionable_pairs, semantically_joinable_pairs = fabrication_pairs
 
-    bucket_name = "FabricatedData"
+    bucket_name = "fabricated-data"
+
+    if not minio_client.bucket_exists(bucket_name):
+        minio_client.make_bucket(bucket_name)
 
     if fbr_joinable:
         app.logger.info(f"Fabricating Joinable data for: {file_name}")
@@ -552,10 +578,8 @@ def create_fabricated_data(file_name: str,
         what_to_fabricate: list[bool] = joinable_specs
         pairs: int = joinable_pairs
 
-    # example of storing data to minio
-    # filename = ...
-    # file = ...
-    # minio_client.fput_object(bucket_name, filename, file)
+        valentine_fabricator('Joinable', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
 
     if fbr_unionable:
         app.logger.info(f"Fabricating Unionable data for: {file_name}")
@@ -563,17 +587,26 @@ def create_fabricated_data(file_name: str,
         what_to_fabricate: list[bool] = unionable_specs
         pairs: int = unionable_pairs
 
+        valentine_fabricator('Unionable', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
+
     if fbr_view_unionable:
         app.logger.info(f"Fabricating View Unionable data for: {file_name}")
         # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
         what_to_fabricate: list[bool] = view_unionable_specs
         pairs: int = view_unionable_pairs
 
+        valentine_fabricator('View-Unionablle', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
+
     if fbr_semantically_joinable:
         app.logger.info(f"Fabricating Semantically Joinable data for: {file_name}")
         # bool array in the format noisy instances, noisy schemata, verbatim instances and verbatim schemata
         what_to_fabricate: list[bool] = semantically_joinable_specs
         pairs: int = semantically_joinable_pairs
+
+        valentine_fabricator('Semantically-Joinable', what_to_fabricate, pairs, df, json_schema, dataset_group_name,
+                             file_name.split('.')[0], minio_client, bucket_name)
 
     minio_client.remove_object('tmp-folder', file_name)
 
@@ -604,18 +637,36 @@ def valentine_fabricate_data():
 
 
 @celery.task
-def generate_boxplot_celery(results: dict):
+def generate_boxplot_celery(results: dict, job_id: str):
+    plots = ValentinePlots()
+
     for algorithm_name, result_paths in results.items():
         for result_path in result_paths:
+            split_path = result_path.split(os.path.sep)
+            filename = split_path[len(split_path) - 1].split('.')[:-1][0]
+
             # This contains a single json file information
             evaluation_result: dict = get_dict_from_minio_json_file(minio_client, 'valentine-results', result_path)
+            plots.total_metrics[filename] = evaluation_result['metrics']
+            plots.run_times[filename] = evaluation_result['run_times']['total_time']
+
+    plots.read_data()
+    instance, schema, hybrid = plots.create_box_plot()
+
+    instance.seek(0)
+    schema.seek(0)
+    hybrid.seek(0)
+
+    minio_client.put_object('valentine-plots', f"{job_id}/instance.png", instance, len(instance.getvalue()))
+    minio_client.put_object('valentine-plots', f"{job_id}/schema.png", schema, len(schema.getvalue()))
+    minio_client.put_object('valentine-plots', f"{job_id}/hybrid.png", hybrid, len(hybrid.getvalue()))
 
 
 @app.post('/valentine/generate_boxplot/<job_id>')
 def valentine_generate_boxplot(job_id: str):
     folder_contents = list_bucket_files('valentine-results', minio_client)
     results = folder_contents[job_id]
-    create_fabricated_data.s(results).apply_async()
+    generate_boxplot_celery.s(results).apply_async()
     return Response('Success', status=200)
 
 
