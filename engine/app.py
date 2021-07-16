@@ -39,12 +39,10 @@ from engine.data_sources.valentine.golden_standard import GoldenStandardLoader
 from engine.data_sources.valentine.valentine_table import ValentineTable
 from engine.forms import UploadFileToMinioForm, DatasetFabricationForm
 from engine.utils.api_utils import AtlasPayload, get_atlas_payload, validate_matcher, get_atlas_source, get_matcher, \
- integrate-valentine-benchmark
-    MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload, ValentineBenchmarkPayload, \
-    get_valentine_benchmark_payload, get_params_from_str_input
+    ValentineBenchmarkPayload, get_valentine_benchmark_payload, get_params_from_str_input, MinioPayload, \
+    get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
 from engine.data_sources.valentine.utils import BenchmarkFiles
 from engine.data_sources.valentine import metrics as valentine_metric_functions
-    MinioPayload, get_minio_payload, get_minio_bulk_payload, MinioBulkPayload
 from engine.utils.valentine_plots import ValentinePlots
 
 
