@@ -11,15 +11,15 @@ class Cupid(BaseMatcher):
     # Optimal parameters suggested in the paper
     def __init__(self, leaf_w_struct=0.2, w_struct=0.2, th_accept=0.7, th_high=0.6, th_low=0.35, c_inc=1.2, c_dec=0.9,
                  th_ns=0.7, parallelism=1):
-        self.leaf_w_struct = leaf_w_struct
-        self.w_struct = w_struct
-        self.th_accept = th_accept
-        self.th_high = th_high
-        self.th_low = th_low
-        self.c_inc = c_inc
-        self.c_dec = c_dec
-        self.th_ns = th_ns
-        self.parallelism = parallelism
+        self.leaf_w_struct = float(leaf_w_struct)
+        self.w_struct = float(w_struct)
+        self.th_accept = float(th_accept)
+        self.th_high = float(th_high)
+        self.th_low = float(th_low)
+        self.c_inc = float(c_inc)
+        self.c_dec = float(c_dec)
+        self.th_ns = float(th_ns)
+        self.parallelism = int(parallelism)
         self.categories = set()
         self.schemata = dict()  # schema name:str, schema_tree
 

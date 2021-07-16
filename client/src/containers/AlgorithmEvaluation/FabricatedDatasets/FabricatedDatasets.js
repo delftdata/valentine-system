@@ -3,7 +3,7 @@ import Aux from "../../../hoc/Aux";
 import Modal from "../../../components/UI/Modal/Modal";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import classes from "./FabricatedDatasets.module.css";
-// import axios from "axios";
+import axios from "axios";
 import {Checkbox, List, ListItem, ListItemSecondaryAction, ListItemText} from "@material-ui/core";
 import TableChartIcon from '@material-ui/icons/TableChart';
 
@@ -26,30 +26,26 @@ class FabricatedDatasets extends Component {
     }
 
     componentDidMount() {
-        const fabricatedData = [];
-        fabricatedData.push(new FabricatedDataset("miller", "miller"));
-        this.setState({fabricatedData: fabricatedData});
-        // this.setState({loading: true})
-        // axios({
-        //      method: "get",
-        //      url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/get_fabricated_data"
-        // }).then(res => {
-        //     const fabricatedData = [];
-        //     for (const [datasetId, datasetValue] of Object.entries(res.data)){
-        //         fabricatedData.push(new FabricatedDataset(datasetId, datasetValue));
-        //     }
-        //     this.setState({loading: false, fabricatedData: fabricatedData});
-        // }).catch(err => {
-        //     this.setState({loading: false});
-        //     console.log(err);
-        // })
+        this.setState({loading: true})
+        axios({
+             method: "get",
+             url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/get_fabricated_datasets"
+        }).then(res => {
+            const fabricatedData = [];
+            for (const [datasetId, datasetValue] of Object.entries(res.data)){
+                fabricatedData.push(new FabricatedDataset(datasetId, datasetValue));
+            }
+            this.setState({loading: false, fabricatedData: fabricatedData});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
     }
 
 
     sendSelectedToParent = () => {
         let selectedDataset = null;
-        for (let i=0; i<this.state.fabricatedData.length; i++){
-            let dataset = this.state.fabricatedData[i];
+        for (let dataset of this.state.fabricatedData){
             if (dataset.selected){
                 selectedDataset = {"id": dataset.id, "name": dataset.name};
                 break;
@@ -64,8 +60,8 @@ class FabricatedDatasets extends Component {
         if (fabricatedData[index].selected){
             fabricatedData[index].selected = false;
         }else{
-            for (let i=0; i<fabricatedData.length; i++){
-                fabricatedData[i].selected = false
+            for (let dataset of fabricatedData){
+                dataset.selected = false
             }
             fabricatedData[index].selected = true;
         }
@@ -101,9 +97,6 @@ class FabricatedDatasets extends Component {
                           </ListItem>
                         ))}
                     </List>
-                    <h5>Upload your own dataset</h5>
-                    <input type="file" name="file" accept=".csv"
-                           title="Upload your own dataset" onChange={this.changeHandler} />
                 </div>
             </Aux>
         );

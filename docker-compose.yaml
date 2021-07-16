@@ -48,7 +48,7 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
-    command: celery worker -A app.celery --loglevel=info
+    command: celery -A app.celery worker -l INFO
 
   redis:
     image: redis:latest
@@ -69,7 +69,7 @@ services:
   celery-flower:
     build: ./engine
     image: dev/schema-matching-engine:latest
-    command: "celery flower -A app.celery flower --broker_api=http://rabbitmq:rabbitmq@celery-rabbitmq:15672/api/"
+    command: "celery -A app.celery flower --broker_api=http://rabbitmq:rabbitmq@celery-rabbitmq:15672/api/"
     restart: always
     environment:
       - FLOWER_PORT=5555

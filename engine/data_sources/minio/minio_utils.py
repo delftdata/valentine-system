@@ -34,7 +34,7 @@ def get_pandas_df_from_minio_csv_file(minio_client: Minio, bucket_name: str, obj
                        skiprows=skiprows, header=header,
                        encoding=get_in_memory_encoding(data[:16 * 1024]),
                        sep=get_in_memory_delimiter(data[:16 * 1024]),
-                       error_bad_lines=False)
+                       on_bad_lines='warn')
 
 
 def get_column_sample_from_minio_csv_file(minio_client: Minio, bucket_name: str, table_name: str, column_name: str,
@@ -48,7 +48,7 @@ def get_column_sample_from_minio_csv_file(minio_client: Minio, bucket_name: str,
                      index_col=False,
                      encoding=get_in_memory_encoding(data[:16 * 1024]),
                      sep=get_in_memory_delimiter(data[:16 * 1024]),
-                     error_bad_lines=False)
+                     on_bad_lines='warn')
     sample = df[column_name].dropna().tolist()[:n]
     if len(sample) < n:
         sample = sample + [''] * (n - len(sample))
@@ -83,3 +83,13 @@ def list_bucket_files(bucket_name: str, minio_client: Minio) -> dict[str, dict[s
         else:
             folders[root_folder] = {folder: [file.object_name]}
     return folders
+
+
+def store_dict_to_minio_as_json(minio_client: Minio, d: dict, bucket_name: str, file_name: str):
+    output = json.dumps(d, indent=2).encode('utf-8')
+    minio_client.put_object(
+        bucket_name=bucket_name,
+        object_name=file_name,
+        data=BytesIO(output),
+        length=len(output)
+    )

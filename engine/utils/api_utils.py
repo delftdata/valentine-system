@@ -45,6 +45,14 @@ class MinioPayload(BaseModel):
         arbitrary_types_allowed: bool = True
 
 
+class ValentineBenchmarkPayload(BaseModel):
+    dataset_name: str
+    algorithm_params: List[Dict[str, object]]
+
+    class Config:
+        arbitrary_types_allowed: bool = True
+
+
 class MinioBulkPayload(BaseModel):
     tables: List[Dict[str, str]]  # The tables in the format [{db_name: ..., table_name: ...}, ...]
     algorithms: List[Dict[str, Optional[Dict[str, object]]]]  # The algorithms to run [{#algorithm_name: {params dict}}]
@@ -77,6 +85,16 @@ def get_atlas_payload(request_json: dict) -> AtlasPayload:
     except ValidationError:
         abort(400, "Incorrect payload arguments. Make sure that they contain the correct atlas_url: str, "
                    "atlas_username: str, atlas_password: str, db_types: List[str] and matching_algorithm: str")
+    else:
+        return payload
+
+
+def get_valentine_benchmark_payload(request_json: dict) -> ValentineBenchmarkPayload:
+    try:
+        payload = ValentineBenchmarkPayload(**request_json)
+    except ValidationError:
+        abort(400, "Incorrect payload arguments. Make sure that they contain the correct dataset_name: str and "
+                   "algorithm_params: List[Dict[str, object]]")
     else:
         return payload
 
@@ -122,3 +140,51 @@ def get_atlas_source(payload: AtlasPayload) -> AtlasSource:
 
 def get_matcher(name, args) -> BaseMatcher:
     return getattr(module_algorithms, name)() if args is None else getattr(module_algorithms, name)(**dict(args))
+
+
+def string_is_int(string: str) -> bool:
+    try:
+        _ = int(string)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def get_ranged_params(splitted: list[str]):
+    values = []
+    start, step, end = splitted
+    if string_is_int(start) and string_is_int(start) and string_is_int(start):
+        start, step, end = int(start), int(step), int(end)
+    else:
+        start, step, end = float(start), float(step), float(end)
+    tmp = start
+    while tmp <= end:
+        values.append(tmp)
+        tmp += step
+    return values
+
+
+def get_params_from_str_input(str_input: str):
+    try:
+        p_variants = str_input.split(',')
+
+        values = []
+        for variant in p_variants:
+            if variant.lower().islower():
+                values.append(variant)
+            else:
+                splitted = variant.split(':')
+                if len(splitted) > 1:
+                    values.extend(get_ranged_params(splitted))
+                else:
+                    if string_is_int(variant):
+                        values.append(int(variant))
+                    else:
+                        values.append(float(variant))
+    except ValueError:
+        abort(400, 'Invalid parameter input string')
+    except AttributeError:
+        return [str_input]
+    else:
+        return values

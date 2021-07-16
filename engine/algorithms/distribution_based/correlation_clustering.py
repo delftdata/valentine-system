@@ -63,10 +63,10 @@ class CorrelationClustering(BaseMatcher):
             Clear cached files or not
         """
         self.uuid: str = str(uuid.uuid4())
-        self.quantiles: int = quantiles
-        self.threshold1: float = threshold1
-        self.threshold2: float = threshold2
-        self.process_num: int = process_num
+        self.quantiles: int = int(quantiles)
+        self.threshold1: float = float(threshold1)
+        self.threshold2: float = float(threshold2)
+        self.process_num: int = int(process_num)
         self.clear_cache: bool = clear_cache
         self.column_names: list = []
         self.target_name: str = ""

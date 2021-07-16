@@ -12,7 +12,7 @@ def get_pandas_df_from_local_fs_csv_file(table_path: str):
                        index_col=False,
                        encoding=get_encoding(table_path),
                        sep=get_delimiter(table_path),
-                       error_bad_lines=False)
+                       on_bad_lines='warn')
 
 
 def get_column_sample_from_csv_file(table_path: str, column_name: str, n: int):
@@ -22,7 +22,7 @@ def get_column_sample_from_csv_file(table_path: str, column_name: str, n: int):
                      index_col=False,
                      encoding=get_encoding(table_path),
                      sep=get_delimiter(table_path),
-                     error_bad_lines=False)
+                     on_bad_lines='warn')
     sample = df[column_name].dropna().tolist()[:n]
     if len(sample) < n:
         sample = sample + [''] * (n - len(sample))
