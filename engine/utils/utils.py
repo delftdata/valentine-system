@@ -7,6 +7,7 @@ import os
 import openpyxl
 from dateutil.parser import parse
 import chardet
+from minio import Minio
 
 
 def is_sorted(matches: dict):
@@ -141,3 +142,9 @@ def get_sha1_hash_of_string(string: str) -> str:
 def delete_file(path: str):
     if os.path.exists(path):
         os.remove(path)
+
+
+def init_minio_buckets(minio_client: Minio, bucket_names: list[str]):
+    for bucket_name in bucket_names:
+        if not minio_client.bucket_exists(bucket_name):
+            minio_client.make_bucket(bucket_name)
