@@ -135,7 +135,7 @@ def write_files_to_minio(target1: Dataset, target2: Dataset, mapping: dict, dir_
         columns=json_schema.keys()
     )
 
-    target1_bytes = target1.data.to_csv().encode('utf-8')
+    target1_bytes = target1.data.to_csv(index=False).encode('utf-8')
     target1_buffer = BytesIO(target1_bytes)
     client.put_object(bucket, group_name + os.path.sep + dir_name + os.path.sep +
                       dir_name.split(os.path.sep)[1] + '_source.csv',
@@ -158,7 +158,7 @@ def write_files_to_minio(target1: Dataset, target2: Dataset, mapping: dict, dir_
         columns=json_schema.keys()
     )
     
-    target2_bytes = target2.data.to_csv().encode('utf-8')
+    target2_bytes = target2.data.to_csv(index=False).encode('utf-8')
     target2_buffer = BytesIO(target2_bytes)
     client.put_object(bucket, group_name + os.path.sep + dir_name + os.path.sep +
                       dir_name.split(os.path.sep)[1] + '_target.csv',

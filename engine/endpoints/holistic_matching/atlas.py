@@ -23,7 +23,7 @@ GUID_NOT_FOUND_RESPONSE = "This guid does not correspond to any database in atla
 app_matches_atlas = Blueprint('app_matches_atlas', __name__)
 
 
-@app_matches_atlas.route("/matches/atlas/holistic/<table_guid>", methods=['POST'])
+@app_matches_atlas.post("/matches/atlas/holistic/<table_guid>")
 def find_holistic_matches_of_table_atlas(table_guid: str):
     payload: AtlasPayload = get_atlas_payload(request.json)
     validate_matcher(payload.matching_algorithm, payload.matching_algorithm_params, "atlas")
@@ -48,7 +48,7 @@ def find_holistic_matches_of_table_atlas(table_guid: str):
         return jsonify(job_uuid)
 
 
-@app_matches_atlas.route('/matches/atlas/other_db/<table_guid>/<db_guid>', methods=['POST'])
+@app_matches_atlas.post('/matches/atlas/other_db/<table_guid>/<db_guid>')
 def find_matches_other_db_atlas(table_guid: str, db_guid: str):
     payload: AtlasPayload = get_atlas_payload(request.json)
     validate_matcher(payload.matching_algorithm, payload.matching_algorithm_params, "atlas")
@@ -72,7 +72,7 @@ def find_matches_other_db_atlas(table_guid: str, db_guid: str):
         return jsonify(job_uuid)
 
 
-@app_matches_atlas.route('/matches/atlas/within_db/<table_guid>', methods=['POST'])
+@app_matches_atlas.post('/matches/atlas/within_db/<table_guid>')
 def find_matches_within_db_atlas(table_guid: str):
     payload: AtlasPayload = get_atlas_payload(request.json)
     validate_matcher(payload.matching_algorithm, payload.matching_algorithm_params, "atlas")

@@ -48,7 +48,7 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
-    command: celery -A app.celery worker -l INFO
+    command: celery -A app.celery worker -l INFO --concurrency=1
 
   redis:
     image: redis:latest

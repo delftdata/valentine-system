@@ -13,26 +13,35 @@ import TableFooter from "@material-ui/core/TableFooter";
 import TableRow from "@material-ui/core/TableRow";
 import TablePagination from "@material-ui/core/TablePagination";
 import FabricatedDataPreview from "../FabricatedDataPreview/FabricatedDataPreview";
+import axios from "axios";
 
 class Dataset extends Component {
 
     state = {
         showSamples: {},
-        samples: {},
         loading: false,
         page: 0,
         rowsPerPage: 5,
+        datasetGroupPairs: []
     }
 
     componentDidMount() {
-        const samples = {};
-        const showSamples = {};
-        console.log(this.props.pairIds)
-        for (const pairId of this.props.pairIds) {
-            samples[pairId] = {};
-            showSamples[pairId] = false;
-        }
-        this.setState({showSamples: showSamples, samples:samples});
+        this.setState({loading: true})
+        axios({
+             method: "get",
+             url: process.env.REACT_APP_SERVER_ADDRESS +
+                 "/valentine/results/get_fabricated_dataset_group_pairs/" +
+                 this.props.datasetId
+        }).then(res => {
+            const showSamples = {};
+            for (const pairId of res.data) {
+                showSamples[pairId] = false;
+            }
+            this.setState({loading: false, datasetGroupPairs: res.data, showSamples: showSamples});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
     }
 
     showSample = (fabricatedPairId) => {
@@ -42,7 +51,38 @@ class Dataset extends Component {
     }
 
     downloadDataset = (fabricatedPairId) => {
+        this.setState({loading: true});
+        axios({
+            method: "get",
+            url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/download_fabricated_dataset_pair/" +
+            this.props.datasetId + "/" + fabricatedPairId,
+            responseType: 'blob',
+        }).then(res => {
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fabricatedPairId + '.zip');
+            document.body.appendChild(link);
+            link.click();
+            this.setState({loading: false});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
+    }
 
+    deleteDataset = (fabricatedPairId, index) => {
+        this.setState({loading: true});
+        axios.delete( process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/delete_fabricated_dataset_pair/" +
+            this.props.datasetId + "/" + fabricatedPairId
+        ).then(() => {
+            const datasetGroupPairs = [...this.state.datasetGroupPairs]
+            datasetGroupPairs.splice(index, 1)
+            this.setState({loading: false, datasetGroupPairs: datasetGroupPairs});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
     }
 
 
@@ -65,14 +105,15 @@ class Dataset extends Component {
                     <TableContainer className={classes.Container}>
                         <Table className={classes.Results}>
                             <TableBody>
-                                {this.props.pairIds.slice(this.state.page * this.state.rowsPerPage,
+                                {this.state.datasetGroupPairs.slice(this.state.page * this.state.rowsPerPage,
                                     this.state.page * this.state.rowsPerPage + this.state.rowsPerPage)
-                                    .map((datasetId) => {
-                                                const fabricatedDataPreview = this.state.showSamples[datasetId] ?
-                                                <FabricatedDataPreview sample={this.state.samples[datasetId]}/>
+                                    .map((datasetPairId, index) => {
+                                                const fabricatedDataPreview = this.state.showSamples[datasetPairId] ?
+                                                <FabricatedDataPreview datasetId={this.props.datasetId}
+                                                                       pairId={datasetPairId}/>
                                                 : null;
                                         return (<div className={classes.FabricatedPair}>
-                                            <p>Fabricated pair: {datasetId}</p>
+                                            <p>Fabricated pair: {datasetPairId}</p>
                                             <Button
                                                 style={{
                                                     borderRadius: 10,
@@ -81,7 +122,7 @@ class Dataset extends Component {
                                                     padding: "10px 10px",
                                                     fontSize: "11px"
                                                 }}
-                                                onClick={() => this.showSample(datasetId)}>
+                                                onClick={() => this.showSample(datasetPairId)}>
                                                 Show Sample
                                             </Button>
                                             <Button
@@ -91,7 +132,7 @@ class Dataset extends Component {
                                                     padding: "10px 10px",
                                                     fontSize: "8px"
                                                 }}
-                                                onClick={() => this.downloadDataset(datasetId)}>
+                                                onClick={() => this.downloadDataset(datasetPairId)}>
                                                 <GetAppIcon/>
                                             </Button>
                                             <Button
@@ -101,7 +142,7 @@ class Dataset extends Component {
                                                     padding: "10px 10px",
                                                     fontSize: "8px"
                                                 }}
-                                                onClick={() => this.deleteDataset(datasetId)}>
+                                                onClick={() => this.deleteDataset(datasetPairId, index)}>
                                                 <DeleteIcon/>
                                             </Button>
                                             <div className={classes.Sample}>
@@ -116,7 +157,7 @@ class Dataset extends Component {
                                         <TablePagination
                                         rowsPerPageOptions={[5, 10, 25]}
                                         component="div"
-                                        count={this.props.pairIds.length}
+                                        count={this.state.datasetGroupPairs.length}
                                         rowsPerPage={this.state.rowsPerPage}
                                         page={this.state.page}
                                         onChangePage={this.handleChangePage}

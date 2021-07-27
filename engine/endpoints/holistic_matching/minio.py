@@ -26,7 +26,7 @@ EMPTY_TABLE_RESPONSE_STR = "The table does not contain any columns"
 app_matches_minio = Blueprint('app_matches_minio', __name__)
 
 
-@app_matches_minio.route("/matches/minio/holistic", methods=['POST'])
+@app_matches_minio.post("/matches/minio/holistic")
 def find_holistic_matches_of_table_minio():
     payload: MinioPayload = get_minio_payload(request.json)
     validate_matcher(payload.matching_algorithm, payload.matching_algorithm_params, "minio")
@@ -48,7 +48,7 @@ def find_holistic_matches_of_table_minio():
         return jsonify(job_uuid)
 
 
-@app_matches_minio.route('/matches/minio/other_db/<db_name>', methods=['POST'])
+@app_matches_minio.post('/matches/minio/other_db/<db_name>')
 def find_matches_other_db_minio(db_name: str):
     payload: MinioPayload = get_minio_payload(request.json)
     validate_matcher(payload.matching_algorithm, payload.matching_algorithm_params, "minio")
@@ -73,7 +73,7 @@ def find_matches_other_db_minio(db_name: str):
         return jsonify(job_uuid)
 
 
-@app_matches_minio.route('/matches/minio/within_db', methods=['POST'])
+@app_matches_minio.post('/matches/minio/within_db')
 def find_matches_within_db_minio():
     payload: MinioPayload = get_minio_payload(request.json)
     validate_matcher(payload.matching_algorithm, payload.matching_algorithm_params, "minio")
@@ -101,7 +101,7 @@ def find_matches_within_db_minio():
         return jsonify(job_uuid)
 
 
-@app_matches_minio.route('/matches/minio/submit_batch_job', methods=['POST'])
+@app_matches_minio.post('/matches/minio/submit_batch_job')
 def submit_batch_job():
     job_uuid: str = str(uuid.uuid4())
 
@@ -131,7 +131,7 @@ def submit_batch_job():
     return jsonify(job_uuid)
 
 
-@app_matches_minio.route('/matches/minio/ls', methods=['GET'])
+@app_matches_minio.get('/matches/minio/ls')
 def get_minio_dir_tree():
     return jsonify([{"db_name": bucket.name,
                      "tables": [obj.object_name for obj in minio_client.list_objects(bucket.name)]
@@ -139,7 +139,7 @@ def get_minio_dir_tree():
                     for bucket in minio_client.list_buckets() if bucket.name not in SYSTEM_RESERVED_MINIO_BUCKETS])
 
 
-@app_matches_minio.route('/matches/minio/column_sample/<db_name>/<table_name>/<column_name>', methods=['GET'])
+@app_matches_minio.get('/matches/minio/column_sample/<db_name>/<table_name>/<column_name>')
 def get_column_sample_minio(db_name: str, table_name: str, column_name: str):
     minio_source: MinioSource = MinioSource()
     return jsonify(minio_source.get_column_sample(db_name, table_name, column_name))

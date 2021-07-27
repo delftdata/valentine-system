@@ -2,6 +2,7 @@ import copy
 import json
 import operator
 import pandas as pd
+import numpy as np
 import seaborn as sns
 
 from engine.utils.plot_utils import plot_by_data_type
@@ -232,7 +233,7 @@ class ValentinePlots:
         get_best_metric(self.f1_score, best_prec_dict, best_dict)
         best_prec_pd = pd.DataFrame.from_dict(best_prec_dict, orient='index').reset_index().rename(
             columns={"index": "Dataset"})
-        best_prec_pd.fillna(value=pd.np.nan, inplace=True)
+        best_prec_pd.fillna(value=np.nan, inplace=True)
 
         category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues \
             = parse_datasets(best_prec_pd)

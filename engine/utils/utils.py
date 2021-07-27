@@ -7,7 +7,21 @@ import os
 import openpyxl
 from dateutil.parser import parse
 import chardet
+from flask.json import JSONEncoder
+import numpy as np
 from minio import Minio
+
+
+class ValentineJsonEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(JSONEncoder, self).default(obj)
 
 
 def is_sorted(matches: dict):

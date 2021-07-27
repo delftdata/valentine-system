@@ -7,7 +7,7 @@ from engine.endpoints.holistic_matching.minio import app_matches_minio
 from engine.endpoints.minio_utils.minio_utils import app_minio_utils
 from engine.endpoints.valentine.results import app_valentine_results
 from engine.endpoints.valentine.valentine import app_valentine
-
+from engine.utils.utils import ValentineJsonEncoder
 
 celery.conf.update(task_serializer='msgpack',
                    accept_content=['msgpack'],
@@ -15,6 +15,8 @@ celery.conf.update(task_serializer='msgpack',
                    task_acks_late=True,
                    worker_prefetch_multiplier=1
                    )
+
+app.json_encoder = ValentineJsonEncoder
 
 app.register_blueprint(app_matches_minio)
 app.register_blueprint(app_matches_atlas)

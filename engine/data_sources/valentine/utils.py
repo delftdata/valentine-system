@@ -5,13 +5,13 @@ class BenchmarkFiles:
 
     def __init__(self, paths: list[str]):
         for file_path in paths:
-            if file_path.endswith('mapping.json'):
+            if file_path.endswith('matches.json'):
                 self.golden_standard_path: str = file_path
-            elif file_path.endswith('source.json'):
+            elif file_path.endswith('source_schema.json'):
                 self.source_schema: str = file_path
             elif file_path.endswith('source.csv'):
                 self.source_data: str = file_path
-            elif file_path.endswith('target.json'):
+            elif file_path.endswith('target_schema.json'):
                 self.target_schema: str = file_path
             elif file_path.endswith('target.csv'):
                 self.target_data: str = file_path

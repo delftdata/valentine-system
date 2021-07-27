@@ -10,13 +10,13 @@ from engine.forms import UploadFileToMinioForm
 app_minio_utils = Blueprint('app_minio_utils', __name__)
 
 
-@app_minio_utils.route('/minio/create_bucket/<bucket_name>', methods=['POST'])
+@app_minio_utils.post('/minio/create_bucket/<bucket_name>')
 def create_minio_bucket(bucket_name: str):
     minio_client.make_bucket(bucket_name)
     return Response(f"Bucket {bucket_name} created successfully", status=200)
 
 
-@app_minio_utils.route('/minio/upload_file/<bucket_name>', methods=['POST'])
+@app_minio_utils.post('/minio/upload_file/<bucket_name>')
 def minio_upload_file(bucket_name: str):
     form = UploadFileToMinioForm()
     if not form.validate_on_submit():

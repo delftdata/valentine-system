@@ -12,19 +12,11 @@ import TableFooter from "@material-ui/core/TableFooter";
 import TableRow from "@material-ui/core/TableRow";
 import TablePagination from "@material-ui/core/TablePagination";
 import SimpleTable from "../../../components/UI/SimpleTable/SimpleTable";
+import axios from "axios";
 
 
-const spurious_head = ["Algorithm", "Column 1", "Column 2", "Similarity", "Type"]
+const spurious_head = ["Column 1", "Column 2", "Similarity", "Type"]
 
-const spurious_body = [
-    ["Cupid", "Climate change adaptation (marker)", "miller2_TradeDevelopment(marker)", "0.932", "False Positive"],
-    ["EmbDI", "Desertification (marker)", "miller2_ChildrenIssues(marker)", "0.757", "False Positive"],
-    ["EmbDI", "Desertification (marker)", "miller2_UrbanIssues(marker)", "0.755", "False Positive"],
-    ["EmbDI", "Climate change mitigation (marker)", "miller2_Biodiversity(marker)", "0.754", "False Positive"],
-    ["EmbDI", "Climate change mitigation (marker)", "miller2_Biodiversity(marker)", "0.754", "False Positive"],
-    ["EmbDI", "Climate change mitigation (marker)", "miller2_Biodiversity(marker)", "0.754", "False Positive"],
-    ["EmbDI", "Climate change mitigation (marker)", "miller2_Biodiversity(marker)", "0.754", "False Positive"],
-]
 
 class EvaluationResult extends Component {
 
@@ -34,26 +26,87 @@ class EvaluationResult extends Component {
         rowsPerPage: 5,
         showSpurious: {},
         spurious: {},
+        pairs: []
     }
 
     componentDidMount() {
-        const spurious = {};
-        const showSpurious = {};
-        console.log(this.props.pairIds)
-        for (const pairId of this.props.pairIds) {
-            spurious[pairId] = {};
-            showSpurious[pairId] = false;
-        }
-        this.setState({showSpurious: showSpurious, spurious:spurious});
+        this.setState({loading: true})
+        axios({
+             method: "get",
+             url: process.env.REACT_APP_SERVER_ADDRESS +
+                 "/valentine/results/get_evaluation_dataset_pairs/" +
+                 this.props.jobId +
+                 "/" +
+                 this.props.groupId
+        }).then(res => {
+            const spurious = {};
+            const showSpurious = {};
+            for (let key in Object.keys(res.data)){
+                console.log(res.data[key]["pair_name"])
+                spurious[res.data[key]["pair_name"]] = [];
+                showSpurious[res.data[key]["pair_name"]] = false;
+            }
+            this.setState({loading: false, pairs: res.data, showSpurious: showSpurious, spurious: spurious});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
     }
 
-    downloadDataset = (fabricatedPairId) => {
-
+    downloadDataset = (fabricatedPairId, algorithm) => {
+        this.setState({loading: true});
+        axios({
+            method: "get",
+            url: process.env.REACT_APP_SERVER_ADDRESS +
+                 "/valentine/results/download_pairs_evaluation_result/" +
+                 this.props.jobId +
+                 "/" +
+                 this.props.groupId +
+                 "/" +
+                 algorithm +
+                 "/" +
+                 fabricatedPairId,
+            responseType: 'blob',
+        }).then(res => {
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fabricatedPairId + '.json');
+            document.body.appendChild(link);
+            link.click();
+            this.setState({loading: false});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
     }
 
-    showSpuriousResults = (fabricatedPairId) => {
+    showSpuriousResults = (fabricatedPairId, algorithm) => {
         const showSpurious = {...this.state.showSpurious};
+        const spurious = {...this.state.spurious};
         showSpurious[fabricatedPairId] = !showSpurious[fabricatedPairId];
+        if (spurious[fabricatedPairId].length === 0){
+            this.setState({loading: true})
+            axios({
+             method: "get",
+             url: process.env.REACT_APP_SERVER_ADDRESS +
+                 "/valentine/results/get_evaluation_dataset_pair_spurious_results/" +
+                 this.props.jobId +
+                 "/" +
+                 this.props.groupId +
+                 "/" +
+                 algorithm +
+                 "/" +
+                 fabricatedPairId
+            }).then(res => {
+                console.log(fabricatedPairId)
+                spurious[fabricatedPairId] = res.data
+                this.setState({loading: false, spurious: spurious})
+            }).catch(err => {
+                this.setState({loading: false});
+                console.log(err);
+            })
+        }
         this.setState({showSpurious: showSpurious});
     }
 
@@ -76,16 +129,19 @@ class EvaluationResult extends Component {
                     <TableContainer className={classes.Container}>
                         <Table className={classes.Results}>
                             <TableBody>
-                                {this.props.pairIds.slice(this.state.page * this.state.rowsPerPage,
+                                {this.state.pairs.slice(this.state.page * this.state.rowsPerPage,
                                     this.state.page * this.state.rowsPerPage + this.state.rowsPerPage)
-                                    .map((datasetId) => {
-                                        const spuriousResults = this.state.showSpurious[datasetId] ?
+                                    .map((pair) => {
+                                        const spuriousResults = this.state.showSpurious[pair["pair_name"]] ?
                                                 <div>
-                                                    <SimpleTable head={spurious_head} body={spurious_body}/>
+                                                    <SimpleTable
+                                                        head={spurious_head}
+                                                        body={this.state.spurious[pair["pair_name"]]}/>
                                                 </div>
                                                 : null;
                                         return (<div className={classes.FabricatedPair}>
-                                                    <p>Fabricated pair: {datasetId}</p>
+                                                    <p>Fabricated pair: {pair["pair_name"]}</p>
+                                                    <p>Algorithm: {pair["algorithm"]}</p>
                                                     <Button
                                                         style={{
                                                             borderRadius: 10,
@@ -93,7 +149,9 @@ class EvaluationResult extends Component {
                                                             padding: "10px 10px",
                                                             fontSize: "8px"
                                                         }}
-                                                        onClick={() => this.downloadDataset(datasetId)}>
+                                                        onClick={() => this.downloadDataset(
+                                                            pair["pair_name"],
+                                                            pair["algorithm"])}>
                                                         <GetAppIcon/>
                                                     </Button>
                                                     <Button
@@ -105,7 +163,8 @@ class EvaluationResult extends Component {
                                                             fontSize: "10px",
                                                             background: "#71100f"
                                                         }}
-                                                        onClick={() => this.showSpuriousResults(datasetId)}>
+                                                        onClick={() => this.showSpuriousResults(pair["pair_name"],
+                                                            pair["algorithm"])}>
                                                         Show Spurious Results
                                                     </Button>
                                                     <div className={classes.Sample}>
@@ -122,7 +181,7 @@ class EvaluationResult extends Component {
                                         <TablePagination
                                         rowsPerPageOptions={[5, 10, 25]}
                                         component="div"
-                                        count={this.props.pairIds.length}
+                                        count={this.state.pairs.length}
                                         rowsPerPage={this.state.rowsPerPage}
                                         page={this.state.page}
                                         onChangePage={this.handleChangePage}

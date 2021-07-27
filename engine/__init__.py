@@ -39,3 +39,7 @@ SYSTEM_RESERVED_MINIO_BUCKETS = [TMP_MINIO_BUCKET, VALENTINE_RESULTS_MINIO_BUCKE
 init_minio_buckets(minio_client, SYSTEM_RESERVED_MINIO_BUCKETS)
 
 CORS(app)
+
+
+class ValentineLoadDataError(Exception):
+    pass

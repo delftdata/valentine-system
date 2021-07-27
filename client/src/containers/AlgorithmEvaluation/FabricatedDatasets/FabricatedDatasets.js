@@ -29,7 +29,7 @@ class FabricatedDatasets extends Component {
         this.setState({loading: true})
         axios({
              method: "get",
-             url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/get_fabricated_datasets"
+             url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/get_fabricated_dataset_groups"
         }).then(res => {
             const fabricatedData = [];
             for (const [datasetId, datasetValue] of Object.entries(res.data)){

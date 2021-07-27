@@ -10,12 +10,12 @@ app_matches_results = Blueprint('app_matches_results', __name__)
 JOB_DOES_NOT_EXIST_RESPONSE_STR = "Job does not exist"
 
 
-@app_matches_results.route('/results/finished_jobs', methods=['GET'])
+@app_matches_results.get('/results/finished_jobs')
 def get_finished_jobs():
     return jsonify(insertion_order_db.lrange('insertion_ordered_ids', 0, -1))
 
 
-@app_matches_results.route('/results/job_results/<job_id>', methods=['GET'])
+@app_matches_results.get('/results/job_results/<job_id>')
 def get_job_results(job_id: str):
     results = json.loads(gzip.decompress(match_result_db.get(job_id)))
     if results is None:
@@ -23,7 +23,7 @@ def get_job_results(job_id: str):
     return jsonify(results)
 
 
-@app_matches_results.route('/results/job_runtime/<job_id>', methods=['GET'])
+@app_matches_results.get('/results/job_runtime/<job_id>')
 def get_job_runtime(job_id: str):
     results = runtime_db.get(job_id)
     if results is None:
@@ -31,7 +31,7 @@ def get_job_runtime(job_id: str):
     return jsonify(json.loads(results))
 
 
-@app_matches_results.route('/results/save_verified_match/<job_id>/<index>', methods=['POST'])
+@app_matches_results.post('/results/save_verified_match/<job_id>/<index>')
 def save_verified_match(job_id: str, index: int):
     results = match_result_db.get(job_id)
     if results is None:
@@ -49,7 +49,7 @@ def save_verified_match(job_id: str, index: int):
     return Response("Matched saved successfully", status=200)
 
 
-@app_matches_results.route('/results/discard_match/<job_id>/<index>', methods=['POST'])
+@app_matches_results.post('/results/discard_match/<job_id>/<index>')
 def discard_match(job_id: str, index: int):
     results = match_result_db.get(job_id)
     if results is None:
@@ -63,14 +63,14 @@ def discard_match(job_id: str, index: int):
     return Response("Matched discarded successfully", status=200)
 
 
-@app_matches_results.route('/results/delete_job/<job_id>', methods=['POST'])
+@app_matches_results.post('/results/delete_job/<job_id>')
 def delete_job(job_id: str):
     match_result_db.delete(job_id)
     insertion_order_db.lrem('insertion_ordered_ids', 1, job_id)
     return Response("Job discarded successfully", status=200)
 
 
-@app_matches_results.route('/results/verified_matches', methods=['GET'])
+@app_matches_results.get('/results/verified_matches')
 def get_verified_matches():
     verified_matches = [json.loads(x) for x in verified_match_db.lrange('verified_matches', 0, -1)]
     return jsonify(verified_matches)
