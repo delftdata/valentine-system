@@ -108,20 +108,21 @@ def parse_datasets(best_prec_pd):
         table_name = "unknown"
         for problem in ["joinable", "semantically_joinable", "unionable", "view_unionable"]:
             if problem in dataset['Dataset']:
-                if problem == "joinable":
+                if problem == "joinable" and "semantically_joinable" not in dataset['Dataset']:
                     category.append("Joinable")
-                    table_name = dataset['Dataset'].split('_joinable_')
+                    table_name = dataset['Dataset'].split('_joinable_')[0]
                 elif problem == "semantically_joinable":
                     category.append("Semantically-Joinable")
-                    table_name = dataset['Dataset'].split('_semantically_joinable_')
-                elif problem == "unionable":
+                    table_name = dataset['Dataset'].split('_semantically_joinable_')[0]
+                elif problem == "unionable" and "view_unionable" not in dataset['Dataset']:
                     category.append("Unionable")
-                    table_name = dataset['Dataset'].split('_unionable_')
+                    table_name = dataset['Dataset'].split('_unionable_')[0]
                 elif problem == "view_unionable":
                     category.append("View-Unionable")
-                    table_name = dataset['Dataset'].split('_view_unionable_')
+                    table_name = dataset['Dataset'].split('_view_unionable_')[0]
 
         variables = dataset['Dataset'].split('_')
+        app.logger.info(f"{variables}")
         mother_table.append(table_name)
         if 'both' in variables:
             way.append("both")
@@ -139,6 +140,12 @@ def parse_datasets(best_prec_pd):
             way.append("vertical")
             horizontal_overlap.append(None)
             vertical_overlap.append("random")
+            column_names.append(determine_collumn_names_type(dataset['Dataset']))
+            typeOfValues.append(determine_values_type(dataset['Dataset']))
+        elif 'unionable' in variables:
+            way.append(None)
+            horizontal_overlap.append(None)
+            vertical_overlap.append(None)
             column_names.append(determine_collumn_names_type(dataset['Dataset']))
             typeOfValues.append(determine_values_type(dataset['Dataset']))
         else:
@@ -237,7 +244,6 @@ class ValentinePlots:
                 else:
                     algorithm_name = "COMA-S"
 
-
             if not "precision_at_n_percent" in self.total_metrics[key].keys():
                 self.f1_score[dataset_name][algorithm_name] = dict()
                 self.recall_at_sizeof_ground_truth[dataset_name][algorithm_name] = dict()
@@ -275,6 +281,8 @@ class ValentinePlots:
 
         category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues \
             = parse_datasets(best_prec_pd)
+
+        app.logger.info(f"\nparse_dataset\n{category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues}")
 
         nm_table = copy.deepcopy(best_dict)
         nm_dict = copy.deepcopy(best_dict)
