@@ -156,10 +156,15 @@ def generate_boxplot_celery(results: dict, job_id: str):
     plots.read_data()
     instance, schema, hybrid = plots.create_box_plot()
 
-    instance.seek(0)
-    schema.seek(0)
-    hybrid.seek(0)
+    if instance:
+        instance.seek(0)
+        minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/instance.png", instance,
+                                len(instance.getvalue()))
 
-    minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/instance.png", instance, len(instance.getvalue()))
-    minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/schema.png", schema, len(schema.getvalue()))
-    minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/hybrid.png", hybrid, len(hybrid.getvalue()))
+    if schema:
+        schema.seek(0)
+        minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/schema.png", schema, len(schema.getvalue()))
+
+    if hybrid:
+        hybrid.seek(0)
+        minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/hybrid.png", hybrid, len(hybrid.getvalue()))
