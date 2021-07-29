@@ -21,6 +21,16 @@ current_palette = sns.color_palette('colorblind')
 
 def plot_by_data_type(dataframe, data_index, xlabel_order, colors, pattern, plot_name, hue_order, cpmap):
     cols = 4
+    flag = False
+    
+    for i, p in enumerate(dataframe.keys()):
+        dd = dataframe[p][data_index]
+        if not(dd.empty or dd['value'].isnull().all()):
+            flag = True
+
+    if not flag:
+        return None
+    
     fig, axe = plt.subplots(1, cols, figsize=(30, 5), sharey=True)
     plt.rcParams["legend.facecolor"] = 'white'
     sns.set(style="whitegrid", font_scale=2)
