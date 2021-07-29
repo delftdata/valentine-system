@@ -199,6 +199,7 @@ def split_data_by_type(dataframe, config):
 
 def make_data_final_plot(dataframe, instance, schema, hybrid, config):
     data = split_data_by_type(dataframe, config)
+    app.logger.info(f"{data['Algorithms']}")
     d_inst = data[data['Algorithms'].isin(instance)]
     d_inst = d_inst.drop(d_inst[d_inst['MotherTable'] == 'Musicians'].index)  # No wikidata
 
@@ -239,10 +240,12 @@ class ValentinePlots:
             algorithm_name = key_split[1].split('_')[0]
 
             if algorithm_name == "Coma":
-                if "COMA_OPT_INST" in key_split:
+                if "COMA_OPT_INST" in key:
                     algorithm_name = "COMA-SI"
                 else:
                     algorithm_name = "COMA-S"
+            elif algorithm_name == "CorrelationClustering":
+                algorithm_name = "DistributionBased"
 
             if not "precision_at_n_percent" in self.total_metrics[key].keys():
                 self.f1_score[dataset_name][algorithm_name] = dict()
@@ -255,10 +258,12 @@ class ValentinePlots:
             parameters = key_split[1].split(algorithm_name)[1]
 
             if algorithm_name == "Coma":
-                if "COMA_OPT_INST" in key_split:
+                if "COMA_OPT_INST" in key:
                     algorithm_name = "COMA-SI"
                 else:
                     algorithm_name = "COMA-S"
+            elif algorithm_name == "CorrelationClustering":
+                algorithm_name = "DistributionBased"
 
             if not "precision_at_n_percent" in self.total_metrics[key].keys():
                 self.f1_score[dataset_name][algorithm_name][parameters] = self.total_metrics[key]['f1_score']
