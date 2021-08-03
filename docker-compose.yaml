@@ -60,7 +60,7 @@ services:
 
   # Message queue required by Celery
   celery-rabbitmq:
-    image: rabbitmq:management
+    image: rabbitmq:3.8-management
     restart: always
     env_file: env_files/rabbitmq.env
     ports:
