@@ -115,6 +115,7 @@ def run_single_benchmark_task(dataset_name: str,
 
     valentine_matches = {(('source', match['source']['clm_nm']),
                           ('target', match['target']['clm_nm'])): match['sim'] for match in matches}
+    valentine_matches = dict(sorted(valentine_matches.items(), key=lambda item: item[1], reverse=True))
     for metric in metric_fns:
         if metric.__name__ != "precision_at_n_percent":
             if metric.__name__ in ['precision', 'recall', 'f1_score'] and matching_algorithm != "Coma":

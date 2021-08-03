@@ -162,3 +162,17 @@ def init_minio_buckets(minio_client: Minio, bucket_names: list[str]):
     for bucket_name in bucket_names:
         if not minio_client.bucket_exists(bucket_name):
             minio_client.make_bucket(bucket_name)
+
+
+def get_in_memory_encoding(f):
+    encoding = chardet.detect(f)['encoding']
+    if encoding == 'ascii':
+        return 'utf-8'
+    else:
+        return encoding
+
+
+def get_in_memory_delimiter(f):
+    first_line = str(f).split('\\n')[0][2:]
+    s = csv.Sniffer()
+    return str(s.sniff(first_line).delimiter)

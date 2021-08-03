@@ -8,7 +8,7 @@ class BaseForm(FlaskForm):
         csrf = False
 
 
-class UploadFileToMinioForm(BaseForm):
+class UploadFileForm(BaseForm):
     resource = FileField('file', validators=[DataRequired()])
 
 

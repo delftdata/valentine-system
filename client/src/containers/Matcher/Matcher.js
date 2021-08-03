@@ -44,7 +44,7 @@ class Matcher extends Component {
         };
         axios({
           method: "post",
-          url:  process.env.REACT_APP_SERVER_ADDRESS + "/matches/minio/submit_batch_job",
+          url:  process.env.REACT_APP_SERVER_ADDRESS + "/matches/holistic/submit_batch_job",
           headers: {},
           data: requestBody})
             .then(response => {this.setState({loading: false, responseReceived: true, latestResponse: response.data});})
@@ -70,9 +70,9 @@ class Matcher extends Component {
                             header={"Select Tables"}
                             sendSelected={(val) => this.getSelected(val, "tables")}
                         />
-                        <Button variant="contained" color="primary" onClick={this.sendJob}>
-                        Add New Source
-                    </Button>
+                        {/*<Button variant="contained" color="primary" onClick={this.sendJob}>*/}
+                        {/*Add New Source*/}
+                        {/*</Button>*/}
                     </div>
                 </div>
                 <div className={classes.AlgorithmSelection}>

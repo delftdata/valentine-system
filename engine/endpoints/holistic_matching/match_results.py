@@ -3,7 +3,7 @@ import json
 
 from flask import Response, jsonify, Blueprint
 
-from engine.db import match_result_db, insertion_order_db, verified_match_db, runtime_db
+from engine.db import match_result_db, insertion_order_db, verified_match_db, runtime_db, holistic_job_source_db
 
 app_matches_results = Blueprint('app_matches_results', __name__)
 
@@ -18,9 +18,10 @@ def get_finished_jobs():
 @app_matches_results.get('/results/job_results/<job_id>')
 def get_job_results(job_id: str):
     results = json.loads(gzip.decompress(match_result_db.get(job_id)))
+    sources = json.loads(holistic_job_source_db.get(job_id))
     if results is None:
         return Response(JOB_DOES_NOT_EXIST_RESPONSE_STR, status=400)
-    return jsonify(results)
+    return jsonify({"results": results, "sources": sources})
 
 
 @app_matches_results.get('/results/job_runtime/<job_id>')

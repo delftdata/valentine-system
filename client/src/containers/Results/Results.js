@@ -79,7 +79,8 @@ class Results extends Component {
                  url: process.env.REACT_APP_SERVER_ADDRESS + "/results/job_results/" + jobId
             }).then(res => {
                 job.showRankedList = true;
-                job.rankedList = res.data;
+                job.rankedList = res.data['results'];
+                job.sources = res.data['sources'];
                 this.setState({loading: false, jobs: jobs});
             }).catch(err => {
                 this.setState({loading: false});
@@ -104,8 +105,9 @@ class Results extends Component {
                                             const job = this.state.jobs[jobId];
                                             const renderedList = job.showRankedList
                                                 ? <MatchList key={jobId}
-                                                           rankedList={job.rankedList}
-                                                           jobId={jobId}/>
+                                                             rankedList={job.rankedList}
+                                                             sources={job.sources}
+                                                             jobId={jobId}/>
                                                            : null;
                                             const splitJobId = jobId.split("_");
                                             const id = splitJobId[0];

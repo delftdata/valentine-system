@@ -1,30 +1,14 @@
-import csv
 import json
 import os
 import tempfile
-from json import JSONDecodeError
 from zipfile import ZipFile
 
-import chardet
 from minio import Minio
 from io import BytesIO
 import pandas as pd
 
-from engine import VALENTINE_FABRICATED_MINIO_BUCKET, ValentineLoadDataError
-
-
-def get_in_memory_encoding(f):
-    encoding = chardet.detect(f)['encoding']
-    if encoding == 'ascii':
-        return 'utf-8'
-    else:
-        return encoding
-
-
-def get_in_memory_delimiter(f):
-    first_line = str(f).split('\\n')[0][2:]
-    s = csv.Sniffer()
-    return str(s.sniff(first_line).delimiter)
+from engine import ValentineLoadDataError
+from engine.utils.utils import get_in_memory_encoding, get_in_memory_delimiter
 
 
 def get_columns_from_minio_csv_file(minio_client: Minio, bucket_name: str, object_name: str):

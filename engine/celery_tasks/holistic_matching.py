@@ -2,15 +2,22 @@ import gzip
 import json
 import uuid
 from timeit import default_timer
+from typing import Union
 
 from engine import app, celery
 from engine.algorithms.algorithms import schema_only_algorithms
-from engine.db import task_result_db, runtime_db, insertion_order_db, match_result_db
+from engine.data_sources.postgres.postgres_source import PostgresSource
+from engine.data_sources.postgres.postgres_table import PostgresTable
+from engine.db import task_result_db, runtime_db, insertion_order_db, match_result_db, holistic_job_source_db
 from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.minio.minio_source import MinioSource
 from engine.data_sources.minio.minio_table import MinioTable
 from engine.utils.api_utils import get_matcher, AtlasPayload, get_atlas_payload, get_atlas_source
+
+
+class NonSupportedBackend(Exception):
+    pass
 
 
 @celery.task
@@ -20,8 +27,55 @@ def get_matches_minio(matching_algorithm: str, algorithm_params: dict, target_ta
     target_db_name, target_table_name = target_table
     source_db_name, source_table_name = source_table
     load_data = False if matching_algorithm in schema_only_algorithms else True
-    target_minio_table: MinioTable = minio_source.get_db_table(target_table_name, target_db_name, load_data=load_data)
-    source_minio_table: MinioTable = minio_source.get_db_table(source_table_name, source_db_name, load_data=load_data)
+    target_minio_table: MinioTable = minio_source.get_db_table(target_table_name,
+                                                               target_db_name, load_data=load_data)
+    source_minio_table: MinioTable = minio_source.get_db_table(source_table_name,
+                                                               source_db_name, load_data=load_data)
+    matches = matcher.get_matches(source_minio_table, target_minio_table)
+    task_uuid: str = str(uuid.uuid4())
+    task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
+    return task_uuid
+
+
+def get_table(source: str, table_name: str, db_name: str, load_data: bool) -> Union[PostgresTable, MinioTable]:
+    if source == 'postgres':
+        postgres_source: PostgresSource = PostgresSource()
+        table: PostgresTable = postgres_source.get_db_table(table_name, db_name, load_data=load_data)
+    elif source == 'minio':
+        minio_source: MinioSource = MinioSource()
+        table: MinioTable = minio_source.get_db_table(table_name, db_name, load_data=load_data)
+    else:
+        raise NonSupportedBackend
+    return table
+
+
+@celery.task
+def get_matches_holistic(job_id: str, matching_algorithm: str, algorithm_params: dict,
+                         target_table: tuple, source_table: tuple):
+    matcher = get_matcher(matching_algorithm, algorithm_params)
+    target_db_name, target_table_name, t_source = target_table
+    source_db_name, source_table_name, s_source = source_table
+    load_data = False if matching_algorithm in schema_only_algorithms else True
+    target_table = get_table(t_source, target_table_name, target_db_name, load_data=load_data)
+    source_table = get_table(s_source, source_table_name, source_db_name, load_data=load_data)
+    matches = matcher.get_matches(source_table, target_table)
+    task_uuid: str = str(uuid.uuid4())
+    task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
+    holistic_job_source_db.set(job_id, json.dumps({"target": t_source, "source": s_source}))
+    return task_uuid
+
+
+@celery.task
+def get_matches_postgres(matching_algorithm: str, algorithm_params: dict, target_table: tuple, source_table: tuple):
+    matcher = get_matcher(matching_algorithm, algorithm_params)
+    postgres_source: PostgresSource = PostgresSource()
+    target_db_name, target_table_name = target_table
+    source_db_name, source_table_name = source_table
+    load_data = False if matching_algorithm in schema_only_algorithms else True
+    target_minio_table: PostgresTable = postgres_source.get_db_table(target_table_name,
+                                                                     target_db_name, load_data=load_data)
+    source_minio_table: PostgresTable = postgres_source.get_db_table(source_table_name,
+                                                                     source_db_name, load_data=load_data)
     matches = matcher.get_matches(source_minio_table, target_minio_table)
     task_uuid: str = str(uuid.uuid4())
     task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))

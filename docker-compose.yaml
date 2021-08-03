@@ -23,6 +23,7 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
+      - env_files/postgres.env
     restart: always
     command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1 --reload
 
@@ -48,6 +49,7 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
+      - env_files/postgres.env
     command: celery -A app.celery worker -l INFO --concurrency=1
 
   redis:
@@ -77,7 +79,16 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
+      - env_files/postgres.env
     ports:
       - 5555:5555
     depends_on:
       - celery-worker
+
+  postgres-db:
+    image: postgres:latest
+    env_file: env_files/postgres.env
+    command: "postgres -c max_connections=100 -c shared_buffers=128MB"
+    shm_size: 128M
+    ports:
+      - 5432:5432
