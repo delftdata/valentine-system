@@ -8,7 +8,7 @@ from io import BytesIO
 import pandas as pd
 
 from engine import ValentineLoadDataError
-from engine.utils.utils import get_in_memory_encoding, get_in_memory_delimiter
+from engine.utils.utils import get_in_memory_encoding, get_in_memory_delimiter, is_date
 
 
 def get_columns_from_minio_csv_file(minio_client: Minio, bucket_name: str, object_name: str):
@@ -32,6 +32,34 @@ def get_pandas_df_from_minio_csv_file(minio_client: Minio, bucket_name: str, obj
         raise ValentineLoadDataError
     else:
         return df
+
+
+def get_valentine_schema_from_minio_csv_file(minio_client: Minio, bucket_name: str, object_name: str) -> dict:
+    try:
+        obj_size = minio_client.stat_object(bucket_name, object_name).size
+        data = list(minio_client.get_object(bucket_name, object_name).stream(obj_size))[0]
+        df = pd.read_csv(BytesIO(data),
+                         index_col=False,
+                         encoding=get_in_memory_encoding(data[:16 * 1024]),
+                         sep=get_in_memory_delimiter(data[:16 * 1024]),
+                         on_bad_lines='warn')
+        i = 0
+        schema = {}
+        for (column_name, column_data) in df.iteritems():
+            d_type = str(column_data.dtype)
+            data = list(column_data.dropna().values)
+            if len(data) != 0 and d_type == "object" and is_date(data[0]):
+                d_type = "date"
+            elif len(data) != 0 and d_type == "object":
+                d_type = "str"
+            elif len(data) == 0 and d_type == "object":
+                d_type = "str"
+            schema[str(i)] = [column_name, d_type]
+            i += 1
+    except Exception:
+        raise ValentineLoadDataError
+    else:
+        return schema
 
 
 def get_column_sample_from_minio_csv_file(minio_client: Minio, bucket_name: str, table_name: str, column_name: str,
@@ -125,6 +153,5 @@ def download_zipped_data_from_minio(minio_client: Minio,
             minio_client.fget_object(bucket,
                                      fabricated_dataset_pair.object_name,
                                      file_path)
-            path_in_zip = os.path.relpath(file_path, zip_path)[3:]
-            zip_object.write(file_path, path_in_zip)
+            zip_object.write(file_path, fabricated_dataset_pair.object_name)
     return zip_path

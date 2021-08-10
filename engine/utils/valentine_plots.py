@@ -4,7 +4,6 @@ import operator
 import pandas as pd
 import numpy as np
 import seaborn as sns
-from engine import app
 
 
 from engine.utils.plot_utils import plot_by_data_type
@@ -24,7 +23,7 @@ problem_dictionary = {
     'Unionable': ['horizontal', 'unionable'],
     'View-Unionable': ['both_0_', 'viewunion'],
     'Joinable': ['both_50_', 'vertical', '_joinable'],
-    'Semantically-Joinable': ['both_50_', 'vertical', '_semjoinable']  # TODO: change with the correct file convention
+    'Semantically-Joinable': ['both_50_', 'vertical', '_semjoinable']
 }
 
 problems = ['Unionable', 'View-Unionable', 'Joinable', 'Semantically-Joinable']
@@ -122,7 +121,7 @@ def parse_datasets(best_prec_pd):
                     table_name = dataset['Dataset'].split('_view_unionable_')[0]
 
         variables = dataset['Dataset'].split('_')
-        app.logger.info(f"{variables}")
+        # app.logger.info(f"{variables}")
         mother_table.append(table_name)
         if 'both' in variables:
             way.append("both")
@@ -199,7 +198,7 @@ def split_data_by_type(dataframe, config):
 
 def make_data_final_plot(dataframe, instance, schema, hybrid, config):
     data = split_data_by_type(dataframe, config)
-    app.logger.info(f"{data['Algorithms']}")
+    # app.logger.info(f"{data['Algorithms']}")
     d_inst = data[data['Algorithms'].isin(instance)]
     d_inst = d_inst.drop(d_inst[d_inst['MotherTable'] == 'Musicians'].index)  # No wikidata
 
@@ -287,7 +286,7 @@ class ValentinePlots:
         category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues \
             = parse_datasets(best_prec_pd)
 
-        app.logger.info(f"\nparse_dataset\n{category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues}")
+        # app.logger.info(f"\nparse_dataset\n{category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues}")
 
         nm_table = copy.deepcopy(best_dict)
         nm_dict = copy.deepcopy(best_dict)

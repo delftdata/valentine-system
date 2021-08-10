@@ -9,6 +9,7 @@ from engine import VALENTINE_PLOTS_MINIO_BUCKET, VALENTINE_FABRICATED_MINIO_BUCK
 from engine.db import minio_client
 from engine.data_sources.minio.minio_utils import list_bucket_files, get_column_sample_from_minio_csv_file2, \
     download_zipped_data_from_minio, get_dict_from_minio_json_file
+from engine.celery_tasks.valentine import generate_boxplot_celery
 
 app_valentine_results = Blueprint('app_valentine_results', __name__)
 
@@ -108,7 +109,7 @@ def valentine_get_evaluation_results():
     for job in folder_contents:
         job_id, dataset_group = job.split('__dataset_group__')
         evaluation_results.append({'job_id': job_id, 'dataset_group': dataset_group.split(os.path.sep)[0]})
-    return jsonify(evaluation_results)
+    return jsonify([dict(s) for s in set(frozenset(d.items()) for d in evaluation_results)])
 
 
 @app_valentine_results.get('/valentine/results/get_evaluation_dataset_pairs/<job_id>/<dataset_group>')
@@ -169,15 +170,23 @@ def valentine_download_pairs_evaluation_result(job_id: str, dataset_group: str,
 
 @app_valentine_results.get('/valentine/results/download_boxplots/<job_id>')
 def valentine_download_boxplots(job_id: str):
-    folder_contents = list_bucket_files(VALENTINE_PLOTS_MINIO_BUCKET, '', minio_client)
-    results = folder_contents[job_id]
 
     data = list()
-    plots = results.keys()
+    plots = [x.object_name for x in minio_client.list_objects(VALENTINE_PLOTS_MINIO_BUCKET,
+                                                              prefix=job_id + os.path.sep,
+                                                              recursive=True)]
+    if not plots:
+        folder_contents = list_bucket_files(VALENTINE_RESULTS_MINIO_BUCKET, job_id, minio_client)
+        if folder_contents:
+            generate_boxplot_celery.s(folder_contents, job_id).apply()
+            plots = [x.object_name for x in minio_client.list_objects(VALENTINE_PLOTS_MINIO_BUCKET,
+                                                                      prefix=job_id + os.path.sep,
+                                                                      recursive=True)]
+        else:
+            abort(400, f'Job with id {job_id} does not exist')
     for plot in plots:
-        obj_size = minio_client.stat_object(VALENTINE_PLOTS_MINIO_BUCKET, results[plot][0]).size
-        img = BytesIO(list(minio_client.get_object(VALENTINE_PLOTS_MINIO_BUCKET, results[plot][0]).stream(obj_size))[0])
+        obj_size = minio_client.stat_object(VALENTINE_PLOTS_MINIO_BUCKET, plot).size
+        img = BytesIO(list(minio_client.get_object(VALENTINE_PLOTS_MINIO_BUCKET, plot).stream(obj_size))[0])
         encoded_img = base64.encodebytes(img.getvalue()).decode()
         data.append(encoded_img)
-
     return jsonify({'result': data})

@@ -7,7 +7,7 @@ from flask import jsonify, abort, request, Response, Blueprint
 
 from engine import VALENTINE_FABRICATED_MINIO_BUCKET, app, VALENTINE_RESULTS_MINIO_BUCKET, TMP_MINIO_BUCKET
 from engine.db import minio_client
-from engine.data_sources.minio.minio_utils import list_bucket_files
+from engine.data_sources.minio.minio_utils import list_bucket_files, get_valentine_schema_from_minio_csv_file
 from engine.forms import DatasetFabricationForm
 from engine.utils.api_utils import ValentineBenchmarkPayload, get_valentine_benchmark_payload, get_params_from_str_input
 from engine.celery_tasks.valentine import create_fabricated_data, run_single_benchmark_task, generate_boxplot_celery
@@ -23,10 +23,14 @@ def valentine_fabricate_data():
         abort(400, form.errors)
     job_uuid: str = str(uuid.uuid4())
     uploaded_file = form.resource.data
-    uploaded_json_schema: dict = json.loads(form.json_schema.data.read())
     size = os.fstat(uploaded_file.fileno()).st_size
     minio_client.put_object(TMP_MINIO_BUCKET, uploaded_file.filename, uploaded_file, size)
-
+    if form.json_schema.data != "null":
+        json_schema: dict = json.loads(form.json_schema.data.read())
+    else:
+        json_schema: dict = get_valentine_schema_from_minio_csv_file(minio_client,
+                                                                     TMP_MINIO_BUCKET,
+                                                                     uploaded_file.filename)
     fabrication_variants = (form.fabricate_joinable.data, form.fabricate_unionable.data,
                             form.fabricate_view_unionable.data, form.fabricate_semantically_joinable.data)
     fabrication_parameters = (form.joinable_specs.data, form.unionable_specs.data,
@@ -34,7 +38,7 @@ def valentine_fabricate_data():
     fabrication_pairs = (form.joinable_pairs.data, form.unionable_pairs.data,
                          form.view_unionable_pairs.data, form.semantically_joinable_pairs.data)
     create_fabricated_data.s(uploaded_file.filename,
-                             uploaded_json_schema,
+                             json_schema,
                              form.dataset_group_name.data.replace(' ', '_'),
                              fabrication_variants,
                              fabrication_parameters,

@@ -14,7 +14,7 @@ class UploadFileForm(BaseForm):
 
 class DatasetFabricationForm(BaseForm):
     resource = FileField('csv_file', validators=[DataRequired()])
-    json_schema = FileField('json_file', validators=[DataRequired()])
+    json_schema = FileField('json_file', validators=[Optional()])
     dataset_group_name = StringField('dataset_group_name', validators=[DataRequired()])
     fabricate_joinable = BooleanField('fabricate_joinable', validators=[Optional()],
                                       default=False)
