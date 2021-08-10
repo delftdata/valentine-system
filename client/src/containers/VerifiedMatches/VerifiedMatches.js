@@ -43,19 +43,16 @@ class VerifiedMatches extends Component {
     state = {
         page: 0,
         rowsPerPage: 10,
-        loading: false,
         verifiedMatches: []
     }
 
     componentDidMount() {
-        this.setState({loading: true});
         axios({
                  method: "get",
                  url: process.env.REACT_APP_SERVER_ADDRESS + "/results/verified_matches"
             }).then(res => {
-                this.setState({loading: false, verifiedMatches: res.data});
+                this.setState({verifiedMatches: res.data});
             }).catch(err => {
-                this.setState({loading: false});
                 console.log(err);
             })
     }

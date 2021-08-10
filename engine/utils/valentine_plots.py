@@ -2,7 +2,9 @@ import copy
 import json
 import operator
 import pandas as pd
+import numpy as np
 import seaborn as sns
+
 
 from engine.utils.plot_utils import plot_by_data_type
 
@@ -21,7 +23,7 @@ problem_dictionary = {
     'Unionable': ['horizontal', 'unionable'],
     'View-Unionable': ['both_0_', 'viewunion'],
     'Joinable': ['both_50_', 'vertical', '_joinable'],
-    'Semantically-Joinable': ['both_50_', 'vertical', '_semjoinable']  # TODO: change with the correct file convention
+    'Semantically-Joinable': ['both_50_', 'vertical', '_semjoinable']
 }
 
 problems = ['Unionable', 'View-Unionable', 'Joinable', 'Semantically-Joinable']
@@ -74,6 +76,24 @@ def get_best_metric(source_dict: dict, target_dict: dict, index):
             target_dict[key][algo] = source_dict[key][algo][index[key][algo]]
 
 
+def determine_collumn_names_type(variables):
+    if "noisy_schemata" in variables:
+        return "ac"
+    elif "verbatim_schemata" in variables:
+        return "ec"
+
+
+def determine_values_type(variables):
+    if "noisy_instances" in variables:
+        return "av"
+    elif "verbatim_instances" in variables:
+        return "ev"
+    elif "semantically_joinable" in variables:
+        return "av"
+    else:
+        return "ev"
+
+
 def parse_datasets(best_prec_pd):
     category = []
     mother_table = []
@@ -84,37 +104,49 @@ def parse_datasets(best_prec_pd):
     vertical_overlap = []
 
     for index, dataset in best_prec_pd.loc[:, ['Dataset']].iterrows():
-        for problem in problem_dictionary.keys():
-            for ss in problem_dictionary[problem]:
-                if ss in dataset['Dataset']:
-                    if (problem == 'Joinable' and '_ev' in dataset['Dataset']) or 'Musicians' in dataset['Dataset']:
-                        category.append(problem)
-                    elif (problem == 'Semantically-Joinable' and '_av' in dataset['Dataset']) or 'Musicians' in \
-                            dataset['Dataset']:
-                        category.append(problem)
-                    elif not (problem == 'Joinable' or problem == 'Semantically-Joinable'):
-                        category.append(problem)
+        table_name = "unknown"
+        for problem in ["joinable", "semantically_joinable", "unionable", "view_unionable"]:
+            if problem in dataset['Dataset']:
+                if problem == "joinable" and "semantically_joinable" not in dataset['Dataset']:
+                    category.append("Joinable")
+                    table_name = dataset['Dataset'].split('_joinable_')[0]
+                elif problem == "semantically_joinable":
+                    category.append("Semantically-Joinable")
+                    table_name = dataset['Dataset'].split('_semantically_joinable_')[0]
+                elif problem == "unionable" and "view_unionable" not in dataset['Dataset']:
+                    category.append("Unionable")
+                    table_name = dataset['Dataset'].split('_unionable_')[0]
+                elif problem == "view_unionable":
+                    category.append("View-Unionable")
+                    table_name = dataset['Dataset'].split('_view_unionable_')[0]
 
         variables = dataset['Dataset'].split('_')
-        mother_table.append(variables[0])
-        if variables[1] == 'both':
-            way.append(variables[1])
-            horizontal_overlap.append(variables[2])
-            vertical_overlap.append(variables[3])
-            column_names.append(variables[4])
-            typeOfValues.append(variables[5])
-        elif variables[1] == 'horizontal':
-            way.append(variables[1])
-            horizontal_overlap.append(variables[2])
+        # app.logger.info(f"{variables}")
+        mother_table.append(table_name)
+        if 'both' in variables:
+            way.append("both")
+            horizontal_overlap.append("random")
+            vertical_overlap.append("random")
+            column_names.append(determine_collumn_names_type(dataset['Dataset']))
+            typeOfValues.append(determine_values_type(dataset['Dataset']))
+        elif 'horizontal' in variables:
+            way.append("horizontal")
+            horizontal_overlap.append("random")
             vertical_overlap.append(None)
-            column_names.append(variables[3])
-            typeOfValues.append(variables[4])
-        elif variables[1] == 'vertical':
-            way.append(variables[1])
+            column_names.append(determine_collumn_names_type(dataset['Dataset']))
+            typeOfValues.append(determine_values_type(dataset['Dataset']))
+        elif 'vertical' in variables:
+            way.append("vertical")
             horizontal_overlap.append(None)
-            vertical_overlap.append(variables[2])
-            column_names.append(variables[3])
-            typeOfValues.append(variables[4])
+            vertical_overlap.append("random")
+            column_names.append(determine_collumn_names_type(dataset['Dataset']))
+            typeOfValues.append(determine_values_type(dataset['Dataset']))
+        elif 'unionable' in variables:
+            way.append(None)
+            horizontal_overlap.append(None)
+            vertical_overlap.append(None)
+            column_names.append(determine_collumn_names_type(dataset['Dataset']))
+            typeOfValues.append(determine_values_type(dataset['Dataset']))
         else:
             way.append(None)
             horizontal_overlap.append(None)
@@ -166,6 +198,7 @@ def split_data_by_type(dataframe, config):
 
 def make_data_final_plot(dataframe, instance, schema, hybrid, config):
     data = split_data_by_type(dataframe, config)
+    # app.logger.info(f"{data['Algorithms']}")
     d_inst = data[data['Algorithms'].isin(instance)]
     d_inst = d_inst.drop(d_inst[d_inst['MotherTable'] == 'Musicians'].index)  # No wikidata
 
@@ -203,7 +236,15 @@ class ValentinePlots:
         for key in self.total_metrics.keys():
             key_split = key.split('__')
             dataset_name = key_split[0]
-            algorithm_name = key_split[1].split('{')[0]
+            algorithm_name = key_split[1].split('_')[0]
+
+            if algorithm_name == "Coma":
+                if "COMA_OPT_INST" in key:
+                    algorithm_name = "COMA-SI"
+                else:
+                    algorithm_name = "COMA-S"
+            elif algorithm_name == "CorrelationClustering":
+                algorithm_name = "DistributionBased"
 
             if not "precision_at_n_percent" in self.total_metrics[key].keys():
                 self.f1_score[dataset_name][algorithm_name] = dict()
@@ -212,8 +253,16 @@ class ValentinePlots:
         for key in self.total_metrics.keys():
             key_split = key.split('__')
             dataset_name = key_split[0]
-            algorithm_name = key_split[1].split('{')[0]
+            algorithm_name = key_split[1].split('_')[0]
             parameters = key_split[1].split(algorithm_name)[1]
+
+            if algorithm_name == "Coma":
+                if "COMA_OPT_INST" in key:
+                    algorithm_name = "COMA-SI"
+                else:
+                    algorithm_name = "COMA-S"
+            elif algorithm_name == "CorrelationClustering":
+                algorithm_name = "DistributionBased"
 
             if not "precision_at_n_percent" in self.total_metrics[key].keys():
                 self.f1_score[dataset_name][algorithm_name][parameters] = self.total_metrics[key]['f1_score']
@@ -232,10 +281,12 @@ class ValentinePlots:
         get_best_metric(self.f1_score, best_prec_dict, best_dict)
         best_prec_pd = pd.DataFrame.from_dict(best_prec_dict, orient='index').reset_index().rename(
             columns={"index": "Dataset"})
-        best_prec_pd.fillna(value=pd.np.nan, inplace=True)
+        best_prec_pd.fillna(value=np.nan, inplace=True)
 
         category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues \
             = parse_datasets(best_prec_pd)
+
+        # app.logger.info(f"\nparse_dataset\n{category, mother_table, way, horizontal_overlap, vertical_overlap, column_names, typeOfValues}")
 
         nm_table = copy.deepcopy(best_dict)
         nm_dict = copy.deepcopy(best_dict)

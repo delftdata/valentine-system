@@ -6,6 +6,7 @@ from .valentine_column import ValentineColumn
 from ..base_column import BaseColumn
 from ..base_table import BaseTable
 from ..minio.minio_utils import get_dict_from_minio_json_file, get_pandas_df_from_minio_csv_file
+from ... import VALENTINE_FABRICATED_MINIO_BUCKET, ValentineLoadDataError, app
 
 
 class ValentineTable(BaseTable):
@@ -56,13 +57,18 @@ class ValentineTable(BaseTable):
         return [str(self.unique_identifier)]
 
     def __load_schema(self):
-        schema = get_dict_from_minio_json_file(self.minio_client, 'fabricated_data', self.__schema_path)
+        schema = get_dict_from_minio_json_file(self.minio_client, VALENTINE_FABRICATED_MINIO_BUCKET, self.__schema_path)
         self.__columns = {column_name: ValentineColumn(column_name, metadata['type'], self.unique_identifier)
                           for column_name, metadata in schema.items()}
 
     def __load_instances(self):
         table_df: pd.DataFrame = get_pandas_df_from_minio_csv_file(self.minio_client,
-                                                                   'fabricated_data', self.__instance_path)
+                                                                   VALENTINE_FABRICATED_MINIO_BUCKET,
+                                                                   self.__instance_path)
+
+        if set(list(table_df.columns)) != set(list(self.__columns.keys())):
+            raise ValentineLoadDataError
+
         for (column_name, column_data) in table_df.iteritems():
             data = list(column_data.dropna().values)
             self.__columns[column_name].append_data(data)

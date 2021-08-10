@@ -104,9 +104,21 @@ class MatchList extends Component {
 
     getColumnSamples = (dbName, tableName, columnName, source) => {
         this.setState({loading: true});
+        let source_db;
+        if(source){
+            source_db = this.props.sources['source']
+        }else{
+            source_db = this.props.sources['target']
+        }
         axios({
                  method: "get",
-                 url: process.env.REACT_APP_SERVER_ADDRESS + "/matches/minio/column_sample/" + dbName + "/" + tableName + "/" + columnName
+                 url: process.env.REACT_APP_SERVER_ADDRESS +
+                     "/matches/" + source_db + "/column_sample/" +
+                     dbName +
+                     "/" +
+                     tableName +
+                     "/" +
+                     columnName
             }).then(res => {
                 if(source){
                     this.setState({loading: false, sourceData: res.data});
@@ -129,9 +141,9 @@ class MatchList extends Component {
     render() {
         return (
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
+                {/*<Modal show={this.state.loading}>*/}
+                {/*    <Spinner />*/}
+                {/*</Modal>*/}
                 <Modal show={this.state.showData} modalClosed={this.closeShowDataHandler}>
                     <ColumnPreview sourceName={this.state.sourceColumn} targetName={this.state.targetColumn}
                                    sourceData={this.state.sourceData} targetData={this.state.targetData}/>

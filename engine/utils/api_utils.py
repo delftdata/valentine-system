@@ -11,7 +11,12 @@ from ..data_sources.atlas.atlas_source import AtlasSource
 from engine.algorithms import algorithms as module_algorithms
 
 
-class AtlasPayload(BaseModel):
+class ValentineBaseModel(BaseModel):
+    class Config:
+        arbitrary_types_allowed: bool = True
+
+
+class AtlasPayload(ValentineBaseModel):
     atlas_url: str
     atlas_username: str
     atlas_password: str
@@ -28,11 +33,8 @@ class AtlasPayload(BaseModel):
     # if the algorithm params are left empty the defaults will be chosen
     matching_algorithm_params: Optional[Dict[str, object]]
 
-    class Config:
-        arbitrary_types_allowed: bool = True
 
-
-class MinioPayload(BaseModel):
+class MinioPayload(ValentineBaseModel):
     table_name: str  # Table name is the Csv file name in the store
     db_name: str  # DB name is the name of the folder that it is under
     matching_algorithm: str
@@ -41,24 +43,24 @@ class MinioPayload(BaseModel):
     # if the algorithm params are left empty the defaults will be chosen
     matching_algorithm_params: Optional[Dict[str, object]]
 
-    class Config:
-        arbitrary_types_allowed: bool = True
+
+class PostgresPayload(MinioPayload):
+    pass
 
 
-class ValentineBenchmarkPayload(BaseModel):
+class ValentineBenchmarkPayload(ValentineBaseModel):
     dataset_name: str
     algorithm_params: List[Dict[str, object]]
 
-    class Config:
-        arbitrary_types_allowed: bool = True
 
-
-class MinioBulkPayload(BaseModel):
+class MinioBulkPayload(ValentineBaseModel):
     tables: List[Dict[str, str]]  # The tables in the format [{db_name: ..., table_name: ...}, ...]
     algorithms: List[Dict[str, Optional[Dict[str, object]]]]  # The algorithms to run [{#algorithm_name: {params dict}}]
 
-    class Config:
-        arbitrary_types_allowed: bool = True
+
+class HolisticBulkPayload(ValentineBaseModel):
+    tables: List[Dict[str, str]]  # dict has keys source, db_name, table_name
+    algorithms: List[Dict[str, Optional[Dict[str, object]]]]  # The algorithms to run [{#algorithm_name: {params dict}}]
 
 
 def validate_matcher(name, args, endpoint):
@@ -122,6 +124,27 @@ def get_minio_payload(request_json: dict) -> MinioPayload:
                    "db_name: str of the table that you want to find the matches.")
     else:
         return payload
+
+
+def get_postgres_payload(request_json: dict) -> PostgresPayload:
+    try:
+        payload = PostgresPayload(**request_json)
+    except ValidationError:
+        abort(400, "Incorrect payload arguments. Make sure that they contain the correct table_name: str and "
+                   "db_name: str of the table that you want to find the matches.")
+    else:
+        return payload
+
+
+def get_holistic_bulk_payload(request_json: dict) -> HolisticBulkPayload:
+    try:
+        payload = HolisticBulkPayload(**request_json)
+    except ValidationError:
+        abort(400, "Incorrect payload arguments. Make sure that they contain the correct table_name: str and "
+                   "db_name: str of the table that you want to find the matches.")
+    else:
+        return payload
+
 
 
 def get_atlas_source(payload: AtlasPayload) -> AtlasSource:

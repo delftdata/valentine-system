@@ -2,8 +2,10 @@ import os
 import re
 from timeit import default_timer
 
+from urllib3.exceptions import ProtocolError
+
 from engine import app, celery, TMP_MINIO_BUCKET, VALENTINE_FABRICATED_MINIO_BUCKET, \
-    VALENTINE_RESULTS_MINIO_BUCKET, VALENTINE_PLOTS_MINIO_BUCKET, VALENTINE_METRICS_TO_COMPUTE
+    VALENTINE_RESULTS_MINIO_BUCKET, VALENTINE_PLOTS_MINIO_BUCKET, VALENTINE_METRICS_TO_COMPUTE, ValentineLoadDataError
 from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.valentine.golden_standard import GoldenStandardLoader
 from engine.data_sources.valentine.utils import BenchmarkFiles
@@ -30,9 +32,6 @@ def create_fabricated_data(file_name: str,
     fbr_joinable, fbr_unionable, fbr_view_unionable, fbr_semantically_joinable = fabrication_variants
     joinable_specs, unionable_specs, view_unionable_specs, semantically_joinable_specs = fabrication_parameters
     joinable_pairs, unionable_pairs, view_unionable_pairs, semantically_joinable_pairs = fabrication_pairs
-
-    if not minio_client.bucket_exists(VALENTINE_FABRICATED_MINIO_BUCKET):
-        minio_client.make_bucket(VALENTINE_FABRICATED_MINIO_BUCKET)
 
     if fbr_joinable:
         app.logger.info(f"Fabricating Joinable data for: {file_name}")
@@ -73,7 +72,9 @@ def create_fabricated_data(file_name: str,
     minio_client.remove_object(TMP_MINIO_BUCKET, file_name)
 
 
-@celery.task
+@celery.task(autoretry_for=(ValentineLoadDataError, ProtocolError,),
+             retry_kwargs={'max_retries': 5},
+             default_retry_delay=5)
 def run_single_benchmark_task(dataset_name: str,
                               dataset_group_name: str,
                               job_uuid: str,
@@ -112,9 +113,9 @@ def run_single_benchmark_task(dataset_name: str,
     metric_fns = [getattr(valentine_metric_functions, met) for met in VALENTINE_METRICS_TO_COMPUTE['names']]
     final_metrics = dict()
 
-    valentine_matches = {((match['source']['tbl_nm'], match['source']['clm_nm']),
-                          (match['target']['tbl_nm'], match['target']['clm_nm'])): match['sim'] for match in matches}
-
+    valentine_matches = {(('source', match['source']['clm_nm']),
+                          ('target', match['target']['clm_nm'])): match['sim'] for match in matches}
+    valentine_matches = dict(sorted(valentine_matches.items(), key=lambda item: item[1], reverse=True))
     for metric in metric_fns:
         if metric.__name__ != "precision_at_n_percent":
             if metric.__name__ in ['precision', 'recall', 'f1_score'] and matching_algorithm != "Coma":
@@ -128,9 +129,13 @@ def run_single_benchmark_task(dataset_name: str,
                                                                                            golden_standard, n)
     name = f'{dataset_name}__{matching_algorithm}{algorithm_params}'
     valentine_matches = {str(k): v for k, v in valentine_matches.items()}
-    output = {"name": name, "matches": valentine_matches, "metrics": final_metrics, "run_times": run_times}
+    output = {"name": name,
+              "dataset_pair_name": dataset_name,
+              "matches": valentine_matches,
+              "metrics": final_metrics,
+              "run_times": run_times}
     safe_dataset_name = re.sub('\\W+', '_', str(name))
-    file_path = f"{job_uuid}/{matching_algorithm}/{safe_dataset_name}.json"
+    file_path = f"{job_uuid}__dataset_group__{dataset_group_name}/{matching_algorithm}/{safe_dataset_name}.json"
     store_dict_to_minio_as_json(minio_client, output, VALENTINE_RESULTS_MINIO_BUCKET, file_path)
 
 
@@ -139,10 +144,10 @@ def generate_boxplot_celery(results: dict, job_id: str):
     plots = ValentinePlots()
 
     for algorithm_name, result_paths in results.items():
+        result_paths = [rp[0] for rp in result_paths.values()]
         for result_path in result_paths:
             split_path = result_path.split(os.path.sep)
             filename = split_path[len(split_path) - 1].split('.')[:-1][0]
-
             # This contains a single json file information
             evaluation_result: dict = get_dict_from_minio_json_file(minio_client,
                                                                     VALENTINE_RESULTS_MINIO_BUCKET, result_path)
@@ -152,10 +157,15 @@ def generate_boxplot_celery(results: dict, job_id: str):
     plots.read_data()
     instance, schema, hybrid = plots.create_box_plot()
 
-    instance.seek(0)
-    schema.seek(0)
-    hybrid.seek(0)
+    if instance:
+        instance.seek(0)
+        minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/instance.png", instance,
+                                len(instance.getvalue()))
 
-    minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/instance.png", instance, len(instance.getvalue()))
-    minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/schema.png", schema, len(schema.getvalue()))
-    minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/hybrid.png", hybrid, len(hybrid.getvalue()))
+    if schema:
+        schema.seek(0)
+        minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/schema.png", schema, len(schema.getvalue()))
+
+    if hybrid:
+        hybrid.seek(0)
+        minio_client.put_object(VALENTINE_PLOTS_MINIO_BUCKET, f"{job_id}/hybrid.png", hybrid, len(hybrid.getvalue()))
