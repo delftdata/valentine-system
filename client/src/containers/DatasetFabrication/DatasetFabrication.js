@@ -55,8 +55,8 @@ class DatasetFabrication extends Component {
             alert("You have not selected any fabrication variant!");
             return;
         }
-        if (this.state.csvFileToBeSent == null || this.state.jsonFileToBeSent == null ) {
-            alert("You have not selected a file!");
+        if (this.state.csvFileToBeSent == null) {
+            alert("You have not selected a csv file!");
             return;
         }
         if (this.state.datasetGroupName===''){
@@ -160,7 +160,7 @@ class DatasetFabrication extends Component {
                         <h6>Select a csv file:</h6>
                         <input type="file" name="file" accept=".csv" title=""
                                onChange={(event) => this.changeFileHandler(event, 'csv')} />
-                        <h6>Select a json file specifying the schema:</h6>
+                        <h6>Select a json file specifying the schema (Optional):</h6>
                         <input type="file" name="file" accept=".json" title=""
                                onChange={(event) => this.changeFileHandler(event, 'json')} />
 		            </div>

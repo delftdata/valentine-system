@@ -26,16 +26,14 @@ class GetFabricated extends Component {
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
              method: "get",
              url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/get_fabricated_dataset_groups"
         }).then(res => {
             const showPairs = {}
             res.data.forEach(datasetGroup => showPairs[datasetGroup] = false);
-            this.setState({loading: false, fabricatedDatasetGroups: res.data, showPairs: showPairs});
+            this.setState({fabricatedDatasetGroups: res.data, showPairs: showPairs});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
@@ -79,16 +77,14 @@ class GetFabricated extends Component {
             dataset.showSample = true;
             this.setState({fabricatedData: fabricatedData});
         }else{
-            this.setState({loading: true});
             axios({
                  method: "get",
                  url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/get_fabricated_sample/" + datasetId
             }).then(res => {
                 dataset.showSample = true;
                 dataset.sample = res.data;
-                this.setState({loading: false, fabricatedData: fabricatedData});
+                this.setState({fabricatedData: fabricatedData});
             }).catch(err => {
-                this.setState({loading: false});
                 console.log(err);
             })
         }

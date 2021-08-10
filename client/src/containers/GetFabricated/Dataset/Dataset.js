@@ -26,7 +26,6 @@ class Dataset extends Component {
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
              method: "get",
              url: process.env.REACT_APP_SERVER_ADDRESS +
@@ -37,9 +36,8 @@ class Dataset extends Component {
             for (const pairId of res.data) {
                 showSamples[pairId] = false;
             }
-            this.setState({loading: false, datasetGroupPairs: res.data, showSamples: showSamples});
+            this.setState({datasetGroupPairs: res.data, showSamples: showSamples});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
@@ -72,15 +70,13 @@ class Dataset extends Component {
     }
 
     deleteDataset = (fabricatedPairId, index) => {
-        this.setState({loading: true});
         axios.delete( process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/delete_fabricated_dataset_pair/" +
             this.props.datasetId + "/" + fabricatedPairId
         ).then(() => {
             const datasetGroupPairs = [...this.state.datasetGroupPairs]
             datasetGroupPairs.splice(index, 1)
-            this.setState({loading: false, datasetGroupPairs: datasetGroupPairs});
+            this.setState({datasetGroupPairs: datasetGroupPairs});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }

@@ -141,9 +141,9 @@ class MatchList extends Component {
     render() {
         return (
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
+                {/*<Modal show={this.state.loading}>*/}
+                {/*    <Spinner />*/}
+                {/*</Modal>*/}
                 <Modal show={this.state.showData} modalClosed={this.closeShowDataHandler}>
                     <ColumnPreview sourceName={this.state.sourceColumn} targetName={this.state.targetColumn}
                                    sourceData={this.state.sourceData} targetData={this.state.targetData}/>

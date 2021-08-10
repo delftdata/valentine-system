@@ -3,8 +3,6 @@ import axios from "axios";
 
 import classes from "./Results.module.css";
 import Aux from "../../hoc/Aux";
-import Modal from "../../components/UI/Modal/Modal";
-import Spinner from "../../components/UI/Spinner/Spinner";
 import {TableContainer} from "@material-ui/core";
 import TablePagination from "@material-ui/core/TablePagination";
 import Table from "@material-ui/core/Table";
@@ -89,12 +87,30 @@ class Results extends Component {
         }
     }
 
+    downloadDataset = (jobId) => {
+        axios({
+            method: "get",
+            url: process.env.REACT_APP_SERVER_ADDRESS +
+                 "/results/download_job_results/" + jobId,
+            responseType: 'blob',
+        }).then(res => {
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', jobId + '.json');
+            document.body.appendChild(link);
+            link.click();
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+
     render() {
         return (
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
+                {/*<Modal show={this.state.loading}>*/}
+                {/*    <Spinner />*/}
+                {/*</Modal>*/}
                 <div className={classes.Parent}>
                         <TableContainer className={classes.Container}>
                             <Table className={classes.Results}>
@@ -122,7 +138,7 @@ class Results extends Component {
                                                                 padding: "10px 10px",
                                                                 fontSize: "8px"
                                                             }}
-                                                            onClick={() => this.downloadDataset(this.props.fabricatedPairId)}>
+                                                            onClick={() => this.downloadDataset(jobId)}>
                                                             <GetAppIcon/>
                                                         </Button>
                                                         <Button

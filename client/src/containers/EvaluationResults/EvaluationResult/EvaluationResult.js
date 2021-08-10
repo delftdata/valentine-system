@@ -1,7 +1,4 @@
 import React, {Component} from "react";
-import Aux from "../../../hoc/Aux";
-import Modal from "../../../components/UI/Modal/Modal";
-import Spinner from "../../../components/UI/Spinner/Spinner";
 import classes from "./EvaluationResult.module.css";
 import Button from "@material-ui/core/Button";
 import GetAppIcon from "@material-ui/icons/GetApp";
@@ -30,7 +27,6 @@ class EvaluationResult extends Component {
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
              method: "get",
              url: process.env.REACT_APP_SERVER_ADDRESS +
@@ -42,19 +38,16 @@ class EvaluationResult extends Component {
             const spurious = {};
             const showSpurious = {};
             for (let key in Object.keys(res.data)){
-                console.log(res.data[key]["pair_name"])
                 spurious[res.data[key]["pair_name"]] = [];
                 showSpurious[res.data[key]["pair_name"]] = false;
             }
-            this.setState({loading: false, pairs: res.data, showSpurious: showSpurious, spurious: spurious});
+            this.setState({pairs: res.data, showSpurious: showSpurious, spurious: spurious});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
 
     downloadDataset = (fabricatedPairId, algorithm) => {
-        this.setState({loading: true});
         axios({
             method: "get",
             url: process.env.REACT_APP_SERVER_ADDRESS +
@@ -71,12 +64,10 @@ class EvaluationResult extends Component {
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', fabricatedPairId + '.json');
+            link.setAttribute('download', fabricatedPairId);
             document.body.appendChild(link);
             link.click();
-            this.setState({loading: false});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
@@ -86,7 +77,6 @@ class EvaluationResult extends Component {
         const spurious = {...this.state.spurious};
         showSpurious[fabricatedPairId] = !showSpurious[fabricatedPairId];
         if (spurious[fabricatedPairId].length === 0){
-            this.setState({loading: true})
             axios({
              method: "get",
              url: process.env.REACT_APP_SERVER_ADDRESS +
@@ -99,11 +89,9 @@ class EvaluationResult extends Component {
                  "/" +
                  fabricatedPairId
             }).then(res => {
-                console.log(fabricatedPairId)
                 spurious[fabricatedPairId] = res.data
-                this.setState({loading: false, spurious: spurious})
+                this.setState({spurious: spurious})
             }).catch(err => {
-                this.setState({loading: false});
                 console.log(err);
             })
         }
@@ -121,79 +109,77 @@ class EvaluationResult extends Component {
 
     render() {
         return(
-            <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
-                <div className={classes.Parent}>
-                    <TableContainer className={classes.Container}>
-                        <Table className={classes.Results}>
-                            <TableBody>
-                                {this.state.pairs.slice(this.state.page * this.state.rowsPerPage,
-                                    this.state.page * this.state.rowsPerPage + this.state.rowsPerPage)
-                                    .map((pair) => {
-                                        const spuriousResults = this.state.showSpurious[pair["pair_name"]] ?
-                                                <div>
-                                                    <SimpleTable
-                                                        head={spurious_head}
-                                                        body={this.state.spurious[pair["pair_name"]]}/>
+            <div className={classes.Parent}>
+                <TableContainer className={classes.Container}>
+                    <Table className={classes.Results}>
+                        <TableBody>
+                            {this.state.pairs.slice(this.state.page * this.state.rowsPerPage,
+                                this.state.page * this.state.rowsPerPage + this.state.rowsPerPage)
+                                .map((pair) => {
+                                    const spuriousData = this.state.spurious[pair["pair_name"]].length === 0 ?
+                                        <p>No spurious data, perfect result</p>
+                                        : <SimpleTable
+                                                    head={spurious_head}
+                                                    body={this.state.spurious[pair["pair_name"]]}/>;
+                                    const spuriousResults = this.state.showSpurious[pair["pair_name"]] ?
+                                            <div>
+                                                {spuriousData}
+                                            </div>
+                                            : null;
+                                    return (<div className={classes.FabricatedPair}>
+                                                <p>Fabricated pair: {pair["pair_name"]}</p>
+                                                <p>Algorithm: {pair["algorithm"]}</p>
+                                                <Button
+                                                    style={{
+                                                        borderRadius: 10,
+                                                        color: "#016b9f",
+                                                        padding: "10px 10px",
+                                                        fontSize: "8px"
+                                                    }}
+                                                    onClick={() => this.downloadDataset(
+                                                        pair["pair_name"],
+                                                        pair["algorithm"])}>
+                                                    <GetAppIcon/>
+                                                </Button>
+                                                <Button
+                                                    style={{
+                                                        borderRadius: 10,
+                                                        color: "white",
+                                                        padding: "10px 10px",
+                                                        marginLeft: "10px",
+                                                        fontSize: "10px",
+                                                        background: "#71100f"
+                                                    }}
+                                                    onClick={() => this.showSpuriousResults(pair["pair_name"],
+                                                        pair["algorithm"])}>
+                                                    Show Spurious Results
+                                                </Button>
+                                                <div className={classes.Sample}>
+                                                    {spuriousResults}
                                                 </div>
-                                                : null;
-                                        return (<div className={classes.FabricatedPair}>
-                                                    <p>Fabricated pair: {pair["pair_name"]}</p>
-                                                    <p>Algorithm: {pair["algorithm"]}</p>
-                                                    <Button
-                                                        style={{
-                                                            borderRadius: 10,
-                                                            color: "#016b9f",
-                                                            padding: "10px 10px",
-                                                            fontSize: "8px"
-                                                        }}
-                                                        onClick={() => this.downloadDataset(
-                                                            pair["pair_name"],
-                                                            pair["algorithm"])}>
-                                                        <GetAppIcon/>
-                                                    </Button>
-                                                    <Button
-                                                        style={{
-                                                            borderRadius: 10,
-                                                            color: "white",
-                                                            padding: "10px 10px",
-                                                            marginLeft: "10px",
-                                                            fontSize: "10px",
-                                                            background: "#71100f"
-                                                        }}
-                                                        onClick={() => this.showSpuriousResults(pair["pair_name"],
-                                                            pair["algorithm"])}>
-                                                        Show Spurious Results
-                                                    </Button>
-                                                    <div className={classes.Sample}>
-                                                        {spuriousResults}
-                                                    </div>
-                                                </div>);
-                                        }
-                                    )
-                                }
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <div className={classes.Pagination}>
-                                        <TablePagination
-                                        rowsPerPageOptions={[5, 10, 25]}
-                                        component="div"
-                                        count={this.state.pairs.length}
-                                        rowsPerPage={this.state.rowsPerPage}
-                                        page={this.state.page}
-                                        onChangePage={this.handleChangePage}
-                                        onChangeRowsPerPage={this.handleChangeRowsPerPage}
-                                        />
-                                    </div>
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
-                    </TableContainer>
-                </div>
-            </Aux>
+                                            </div>);
+                                    }
+                                )
+                            }
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <div className={classes.Pagination}>
+                                    <TablePagination
+                                    rowsPerPageOptions={[5, 10, 25]}
+                                    component="div"
+                                    count={this.state.pairs.length}
+                                    rowsPerPage={this.state.rowsPerPage}
+                                    page={this.state.page}
+                                    onChangePage={this.handleChangePage}
+                                    onChangeRowsPerPage={this.handleChangeRowsPerPage}
+                                    />
+                                </div>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </TableContainer>
+            </div>
         );
     }
 

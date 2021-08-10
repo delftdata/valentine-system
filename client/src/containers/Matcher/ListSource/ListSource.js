@@ -7,8 +7,6 @@ import TreeItem from "@material-ui/lab/TreeItem";
 import Checkbox from "@material-ui/core/Checkbox";
 import classes from "./ListSource.module.css";
 import Aux from "../../../hoc/Aux";
-import Modal from "../../../components/UI/Modal/Modal";
-import Spinner from "../../../components/UI/Spinner/Spinner";
 import axios from "axios";
 import Typography from "@material-ui/core/Typography";
 import PostgresLogo from "../../../assets/PostgreSQL-Logo.wine.svg"
@@ -45,12 +43,10 @@ class Table {
 class ListSource extends Component {
 
     state = {
-        dbTree: [],
-        loading: false
+        dbTree: []
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
             method: "get",
             url: process.env.REACT_APP_SERVER_ADDRESS + "/matches/holistic/ls_tables"
@@ -60,9 +56,8 @@ class ListSource extends Component {
                 res.data[source].map((dbInfo, index2) =>
                     dbTree.push(new Database(index + '_' + index2, dbInfo["db_name"], dbInfo["tables"], source)))
                 );
-            this.setState({loading: false, dbTree: dbTree});
+            this.setState({dbTree: dbTree});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         });
     }
@@ -140,9 +135,6 @@ class ListSource extends Component {
     render() {
         return(
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
                 <div className={classes.ListSource}>
                     <h5>{this.props.header}</h5>
                     <TreeView defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>

@@ -58,9 +58,9 @@ class AlgorithmEvaluation extends Component {
     render() {
         return (
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
+                {/*<Modal show={this.state.loading}>*/}
+                {/*    <Spinner />*/}
+                {/*</Modal>*/}
                 <Modal show={this.state.responseReceived} modalClosed={this.closeResponseHandler}>
                     <Response response={this.state.latestResponse}/>
                 </Modal>

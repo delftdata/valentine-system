@@ -11,7 +11,6 @@ import TablePagination from "@material-ui/core/TablePagination";
 import axios from "axios";
 import EvaluationResult from "./EvaluationResult/EvaluationResult";
 import TableRow from "@material-ui/core/TableRow";
-import TestFigure from "../../assets/Unionable-all-1.png";
 import Button from "@material-ui/core/Button";
 import BarChartIcon from "@material-ui/icons/BarChart";
 import GetAppIcon from "@material-ui/icons/GetApp";
@@ -22,6 +21,7 @@ class EvaluationResults extends Component {
     state = {
         evaluationResults: [],
         showPairs: {},
+        boxplotData: '',
         page: 0,
         rowsPerPage: 5,
         loading: false,
@@ -29,7 +29,6 @@ class EvaluationResults extends Component {
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
              method: "get",
              url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/get_evaluation_results"
@@ -38,15 +37,27 @@ class EvaluationResults extends Component {
             for (let job in res.data){
                 showPairs[job['job_id']] = false
             }
-            this.setState({loading: false, evaluationResults: res.data, showPairs: showPairs});
+            this.setState({evaluationResults: res.data, showPairs: showPairs});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
 
-    displayBoxplot = (fabricatedPairId) => {
-        this.setState({showPlot: true});
+    displayBoxplot = (fabricatedPairId, datasetGroup) => {
+        this.setState({loading: true});
+        axios({
+             method: "get",
+             url: process.env.REACT_APP_SERVER_ADDRESS +
+                 "/valentine/results/download_boxplots/" +
+                 fabricatedPairId +
+                 "__dataset_group__" +
+                 datasetGroup
+        }).then(res => {
+            this.setState({boxplotData: res.data['result'], showPlot: true, loading: false});
+        }).catch(err => {
+            this.setState({loading: false});
+            console.log(err);
+        })
     }
 
     closeShowDataHandler = () => {
@@ -99,7 +110,9 @@ class EvaluationResults extends Component {
                     <Spinner />
                 </Modal>
                 <Modal show={this.state.showPlot} modalClosed={this.closeShowDataHandler} figure={true}>
-                    <img src={TestFigure} alt={"figure"} className={classes.Modal}/>
+                    <img src={`data:image/png;base64,${this.state.boxplotData}`}
+                         alt={"figure"}
+                         className={classes.Modal}/>
                 </Modal>
                 <div className={classes.Parent}>
                     <TableContainer className={classes.Container}>
@@ -129,7 +142,7 @@ class EvaluationResults extends Component {
                                                     fontSize: "8px",
                                                     marginRight: "10px"
                                                 }}
-                                                onClick={() => this.displayBoxplot(evaluationResult['job_id'])}>
+                                                onClick={() => this.displayBoxplot(evaluationResult['job_id'], evaluationResult['dataset_group'])}>
                                                 <BarChartIcon/>
                                             </Button>
                                             <Button

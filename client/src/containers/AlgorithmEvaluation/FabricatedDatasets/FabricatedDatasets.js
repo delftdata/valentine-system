@@ -72,9 +72,9 @@ class FabricatedDatasets extends Component {
     render() {
         return(
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
+                {/*<Modal show={this.state.loading}>*/}
+                {/*    <Spinner />*/}
+                {/*</Modal>*/}
                 <div className={classes.ListSource}>
                     <h5>Select fabricated dataset</h5>
                     <List dense className={classes.ListRoot}>
