@@ -22,13 +22,13 @@ jobs:
       run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
       
     - name: Build the UI Docker image
-      run: docker build ./client --tag delftdatasystems/schema-matching-client:latest --build-arg REACT_APP_SERVER_ADDRESS=/api ./client
+      run: docker build -t delftdatasystems/schema-matching-client:latest --build-arg REACT_APP_SERVER_ADDRESS=/api ./client
       
     - name: Docker Push the UI Docker image
       run: docker push delftdatasystems/schema-matching-client:latest
       
     - name: Build the Engine Docker image
-      run: docker build ./engine --tag delftdatasystems/schema-matching-engine:latest
+      run: docker build -t delftdatasystems/schema-matching-engine:latest ./engine
       
     - name: Docker Push the Engine Docker image
       run: docker push delftdatasystems/schema-matching-engine:latest
