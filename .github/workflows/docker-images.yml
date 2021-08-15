@@ -1,0 +1,34 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: docker login
+      env:
+        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      run: docker login -u $DOCKER_ID -p $DOCKER_PASSWORD
+      
+    - name: Build the UI Docker image
+      run: docker build ./client --tag delftdatasystems/schema-matching-client:latest --build-arg REACT_APP_SERVER_ADDRESS=/api ./client
+      
+    - name: Docker Push the UI Docker image
+      run: docker push delftdatasystems/schema-matching-client:latest
+      
+    - name: Build the Engine Docker image
+      run: docker build ./engine --tag delftdatasystems/schema-matching-engine:latest
+      
+    - name: Docker Push the Engine Docker image
+      run: docker push delftdatasystems/schema-matching-engine:latest
