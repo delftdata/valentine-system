@@ -9,3 +9,4 @@ helm install -f helm-config/minio-helm-values.yaml minio bitnami/minio
 helm install -f helm-config/redis-helm-values.yaml redis bitnami/redis
 helm install -f helm-config/rabbitmq-helm-values.yaml rabbitmq bitnami/rabbitmq
 helm install -f helm-config/nginx-helm-values.yaml nginx ingress-nginx/ingress-nginx
+helm install -f helm-config/postgres-helm-values.yaml postgres bitnami/postgresql

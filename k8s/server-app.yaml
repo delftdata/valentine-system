@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: kpsarakis/schema-matching-engine:latest
+          image: delftdatasystems/schema-matching-engine:latest
           resources:
             limits:
               memory: "8Gi"
@@ -35,7 +35,7 @@ spec:
               memory: "8Gi"
               cpu: "2"
           command: ["gunicorn"]
-          args: ["-b", "0.0.0.0:5000", "app:app", "-t", "300", "-w", "2", "--threads", "10"]
+          args: ["-b", "0.0.0.0:5000", "app:app", "-t", "60", "-w", "2", "--threads", "10"]
           ports:
             - containerPort: 5000
           env:
@@ -61,3 +61,11 @@ spec:
               value: "minio"
             - name: MINIO_SECRET_KEY
               value: "minio123"
+            - name: POSTGRES_USER
+              value: "test"
+            - name: POSTGRES_PASSWORD
+              value: "test"
+            - name: POSTGRES_HOST
+              value: "postgres-db"
+            - name: POSTGRES_PORT
+              value: "5432"

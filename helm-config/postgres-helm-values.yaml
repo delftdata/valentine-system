@@ -1,0 +1,5 @@
+postgresqlUsername: test
+postgresqlPassword: test
+postgresqlDatabase: postgres-db
+service:
+  port: 5432

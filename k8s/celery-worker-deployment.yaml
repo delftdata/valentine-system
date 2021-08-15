@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: worker-deployment
 spec:
-  replicas: 9
+  replicas: 8
   selector:
     matchLabels:
       component: worker
@@ -14,16 +14,16 @@ spec:
     spec:
       containers:
         - name: worker
-          image: kpsarakis/schema-matching-engine:latest
+          image: delftdatasystems/schema-matching-engine:latest
           resources:
             limits:
-              memory: "24Gi"
-              cpu: "8"
+              memory: "3Gi"
+              cpu: "1"
             requests:
-              memory: "24Gi"
-              cpu: "8"
+              memory: "3Gi"
+              cpu: "1"
           command: ["celery"]
-          args: ["worker", "-A", "app.celery", "--concurrency=8", "--loglevel=info"]
+          args: ["-A", "app.celery", "worker", "-l", "INFO", "--concurrency=1"]
           ports:
             - containerPort: 5000
           env:
@@ -49,3 +49,11 @@ spec:
               value: "minio"
             - name: MINIO_SECRET_KEY
               value: "minio123"
+            - name: POSTGRES_USER
+              value: "test"
+            - name: POSTGRES_PASSWORD
+              value: "test"
+            - name: POSTGRES_HOST
+              value: "postgres-db"
+            - name: POSTGRES_PORT
+              value: "5432"

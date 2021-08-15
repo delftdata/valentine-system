@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: kpsarakis/schema-matching-client:latest
+          image: delftdatasystems/schema-matching-client:latest
           resources:
             limits:
               memory: "500Mi"

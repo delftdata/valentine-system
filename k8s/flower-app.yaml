@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: flower
-          image: kpsarakis/schema-matching-engine:latest
+          image: delftdatasystems/schema-matching-engine:latest
           resources:
             limits:
               memory: "1Gi"
@@ -34,7 +34,7 @@ spec:
               memory: "1Gi"
               cpu: "500m"
           command: ['celery']
-          args: ['flower', '-A', 'app.celery', 'flower', '--broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/']
+          args: ['-A', 'app.celery', 'flower', '--broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/']
           ports:
             - containerPort: 5555
           env:
@@ -60,3 +60,11 @@ spec:
               value: "minio"
             - name: MINIO_SECRET_KEY
               value: "minio123"
+            - name: POSTGRES_USER
+              value: "test"
+            - name: POSTGRES_PASSWORD
+              value: "test"
+            - name: POSTGRES_HOST
+              value: "postgres-db"
+            - name: POSTGRES_PORT
+              value: "5432"

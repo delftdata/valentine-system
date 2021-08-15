@@ -9,20 +9,21 @@ services:
         REACT_APP_SERVER_ADDRESS: http://localhost:5000
     image: dev/schema-matching-client:latest
     ports:
-      - 3000:3000
+      - "3000:3000"
 
   # WSGI Flask service containing the schema matching API
   engine:
     build: ./engine
     image: dev/schema-matching-engine:latest
     ports:
-      - 5000:5000
+      - "5000:5000"
     volumes:
       - ./engine:/usr/local/schema-matching-system/engine
     env_file:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
+      - env_files/postgres.env
     restart: always
     command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1 --reload
 
@@ -30,7 +31,7 @@ services:
   minio:
     image: minio/minio:latest
     ports:
-      - 9000:9000
+      - "9000:9000"
     volumes:
       - ./minio-volume:/mnt/data
     env_file:
@@ -48,22 +49,23 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
-    command: celery -A app.celery worker -l INFO
+      - env_files/postgres.env
+    command: celery -A app.celery worker -l INFO --concurrency=1
 
   redis:
     image: redis:latest
     command: redis-server --requirepass redis
     ports:
-      - 6379:6379
+      - "6379:6379"
 
   # Message queue required by Celery
   celery-rabbitmq:
-    image: rabbitmq:management
+    image: rabbitmq:3.8-management
     restart: always
     env_file: env_files/rabbitmq.env
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "5672:5672"
+      - "15672:15672"
 
   # Celery Flower dashboard
   celery-flower:
@@ -77,7 +79,16 @@ services:
       - env_files/redis.env
       - env_files/minio.env
       - env_files/rabbitmq.env
+      - env_files/postgres.env
     ports:
-      - 5555:5555
+      - "5555:5555"
     depends_on:
       - celery-worker
+
+  postgres-db:
+    image: postgres:latest
+    env_file: env_files/postgres.env
+    command: "postgres -c max_connections=100 -c shared_buffers=128MB"
+    shm_size: 128M
+    ports:
+      - "5432:5432"
