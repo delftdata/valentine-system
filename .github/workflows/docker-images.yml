@@ -17,9 +17,9 @@ jobs:
     
     - name: docker login
       env:
-        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_ID: ${{secrets.DOCKER_ID}}
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-      run: docker login -u $DOCKER_ID -p $DOCKER_PASSWORD
+      run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
       
     - name: Build the UI Docker image
       run: docker build ./client --tag delftdatasystems/schema-matching-client:latest --build-arg REACT_APP_SERVER_ADDRESS=/api ./client
