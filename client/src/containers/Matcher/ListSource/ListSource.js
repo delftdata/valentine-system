@@ -7,8 +7,6 @@ import TreeItem from "@material-ui/lab/TreeItem";
 import Checkbox from "@material-ui/core/Checkbox";
 import classes from "./ListSource.module.css";
 import Aux from "../../../hoc/Aux";
-import Modal from "../../../components/UI/Modal/Modal";
-import Spinner from "../../../components/UI/Spinner/Spinner";
 import axios from "axios";
 import Typography from "@material-ui/core/Typography";
 import PostgresLogo from "../../../assets/PostgreSQL-Logo.wine.svg"
@@ -16,13 +14,18 @@ import MinioLogo from "../../../assets/minio-1.svg"
 
 
 class Database {
-    constructor(id, name, tables) {
+    constructor(id, name, tables, source) {
         this.id = id;
         this.name = name;
         this.tables = [];
         this.selected = false;
+        this.source = source
         this.add_tables(tables);
-        this.provider = (id % 2 === 0) ? MinioLogo : PostgresLogo;
+        if (source === 'postgres') {
+            this.provider = PostgresLogo;
+        } else if (source === 'minio') {
+            this.provider = MinioLogo;
+        }
     }
     add_tables(tables){
         tables.map((tableName, index) => this.tables.push(new Table(index, tableName)));
@@ -40,21 +43,21 @@ class Table {
 class ListSource extends Component {
 
     state = {
-        dbTree: [],
-        loading: false
+        dbTree: []
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
             method: "get",
-            url: process.env.REACT_APP_SERVER_ADDRESS + "/matches/minio/ls"
+            url: process.env.REACT_APP_SERVER_ADDRESS + "/matches/holistic/ls_tables"
         }).then(res => {
             const dbTree = [];
-            res.data.map((dbInfo, index) => dbTree.push(new Database(index, dbInfo["db_name"], dbInfo["tables"])));
-            this.setState({loading: false, dbTree: dbTree});
+            Object.keys(res.data).map((source, index) =>
+                res.data[source].map((dbInfo, index2) =>
+                    dbTree.push(new Database(index + '_' + index2, dbInfo["db_name"], dbInfo["tables"], source)))
+                );
+            this.setState({dbTree: dbTree});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         });
     }
@@ -63,7 +66,8 @@ class ListSource extends Component {
         const selectedTables = [];
         this.state.dbTree.map(db =>
             db.tables.map(table =>
-                (table.selected) ? selectedTables.push({"db_name": db.name, "table_name": table.name}) : null));
+                (table.selected) ? selectedTables.push({"db_name": db.name,
+                    "table_name": table.name, "source": db.source}) : null));
         this.props.sendSelected(selectedTables);
     }
 
@@ -131,9 +135,6 @@ class ListSource extends Component {
     render() {
         return(
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
                 <div className={classes.ListSource}>
                     <h5>{this.props.header}</h5>
                     <TreeView defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>

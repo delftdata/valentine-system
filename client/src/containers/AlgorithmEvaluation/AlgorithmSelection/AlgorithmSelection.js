@@ -27,7 +27,7 @@ class AlgorithmSelection extends Component {
                         {value: "COMA_OPT_INST", displayValue: "Schema + Instances"}
                         ]
                 },
-                value: "",
+                value: "COMA_OPT",
                 show: false
             },
             Coma_max_n: {
@@ -39,7 +39,7 @@ class AlgorithmSelection extends Component {
                     step: 1,
                     defaultValue: 0
                 },
-                value: "",
+                value: 0,
                 show: false
             }
         },
@@ -64,7 +64,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.2
                 },
-                value: "",
+                value: 0.2,
                 show: false
             },
             Cupid_w_struct: {
@@ -76,7 +76,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.2
                 },
-                value: "",
+                value: 0.2,
                 show: false
             },
             Cupid_th_accept: {
@@ -88,7 +88,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.7
                 },
-                value: "",
+                value: 0.7,
                 show: false
             },
             Cupid_th_high: {
@@ -100,7 +100,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.6
                 },
-                value: '',
+                value: 0.6,
                 show: false
             },
             Cupid_th_low: {
@@ -112,7 +112,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.35
                 },
-                value: '',
+                value: 0.35,
                 show: false
             },
             Cupid_th_ns: {
@@ -124,7 +124,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.7
                 },
-                value: "",
+                value: 0.7,
                 show: false
             }
         },
@@ -149,7 +149,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.15
                 },
-                value: "",
+                value: 0.15,
                 show: false
             },
             CorrelationClustering_threshold2: {
@@ -161,7 +161,7 @@ class AlgorithmSelection extends Component {
                     step: 0.01,
                     defaultValue: 0.15
                 },
-                value: "",
+                value: 0.15,
                 show: false
             },
             CorrelationClustering_quantiles: {
@@ -173,7 +173,7 @@ class AlgorithmSelection extends Component {
                     step: 1,
                     defaultValue: 256
                 },
-                value: "",
+                value: 256,
                 show: false
             }
         },

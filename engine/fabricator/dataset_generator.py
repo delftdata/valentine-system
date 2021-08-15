@@ -135,7 +135,7 @@ def write_files_to_minio(target1: Dataset, target2: Dataset, mapping: dict, dir_
         columns=json_schema.keys()
     )
 
-    target1_bytes = target1.data.to_csv().encode('utf-8')
+    target1_bytes = target1.data.to_csv(index=False).encode('utf-8')
     target1_buffer = BytesIO(target1_bytes)
     client.put_object(bucket, group_name + os.path.sep + dir_name + os.path.sep +
                       dir_name.split(os.path.sep)[1] + '_source.csv',
@@ -158,7 +158,7 @@ def write_files_to_minio(target1: Dataset, target2: Dataset, mapping: dict, dir_
         columns=json_schema.keys()
     )
     
-    target2_bytes = target2.data.to_csv().encode('utf-8')
+    target2_bytes = target2.data.to_csv(index=False).encode('utf-8')
     target2_buffer = BytesIO(target2_bytes)
     client.put_object(bucket, group_name + os.path.sep + dir_name + os.path.sep +
                       dir_name.split(os.path.sep)[1] + '_target.csv',
@@ -312,7 +312,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                 for i in range(no_pairs):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
             elif verbatim_instances and noisy_instances:
 
@@ -322,21 +322,21 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                 for i in range(pairs_ver):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi):
 
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
             else:
 
                 for i in range(no_pairs):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
         elif verbatim_schemata and noisy_schemata:
@@ -349,14 +349,14 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                 for i in range(pairs_ver):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
 
             elif verbatim_instances and noisy_instances:
@@ -369,27 +369,27 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                 for i in range(pairs_ver_ver):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_ver_noi):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi_ver):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name) 
 
                 for i in range(pairs_noi_noi):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
                 
             else:
@@ -400,14 +400,14 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                 for i in range(pairs_ver):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
 
         else:
@@ -416,7 +416,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name) 
                 
             elif verbatim_instances and noisy_instances:
@@ -428,14 +428,14 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name) 
 
                 for i in range(pairs_noi):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
                 
             else:
@@ -444,7 +444,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
 
     else:
@@ -468,7 +468,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = vertical_split(in_dataset, 0, choice(columns), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi):
@@ -483,7 +483,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
         elif verbatim_schemata and noisy_schemata:
@@ -497,7 +497,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi):
@@ -505,7 +505,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
 
             elif verbatim_instances and noisy_instances:
@@ -519,14 +519,14 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, False)
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__verbatim_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_verbatim_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_ver_noi):
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi_ver):
@@ -534,7 +534,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name) 
 
                 for i in range(pairs_noi_noi):
@@ -542,7 +542,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
                 
             else:
@@ -554,7 +554,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target1, target2, common = horizontal_split(in_dataset, choice(overlaps), False, True, choice(approx_prcs))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__verbatim_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_verbatim_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)
 
                 for i in range(pairs_noi):
@@ -562,7 +562,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
 
         else:
@@ -573,7 +573,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name) 
                 
             elif verbatim_instances and noisy_instances:
@@ -586,7 +586,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_verbatim_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_verbatim_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name) 
 
                 for i in range(pairs_noi):
@@ -594,7 +594,7 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)    
                 
             else:
@@ -604,5 +604,5 @@ def valentine_fabricator(scenario: str, parameters: list[bool], no_pairs: int, i
                     target2 = approximate_column_names(target2, filename, randint(1, 5))
                     matches = create_mappings('source', 'target', target1.schema, target2.schema, common)
                     target1, target2 = overlap2sources(target1, target2, 0.0, False)
-                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable__noisy_schemata_noisy_instances' 
+                    name_pair = scenario + '/' + filename + '_' + str(i+1) + '_view_unionable_noisy_schemata_noisy_instances'
                     write_files_to_minio(target1, target2, matches, name_pair, client, bucket, group_name)   

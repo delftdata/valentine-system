@@ -8,13 +8,13 @@ class BaseForm(FlaskForm):
         csrf = False
 
 
-class UploadFileToMinioForm(BaseForm):
+class UploadFileForm(BaseForm):
     resource = FileField('file', validators=[DataRequired()])
 
 
 class DatasetFabricationForm(BaseForm):
     resource = FileField('csv_file', validators=[DataRequired()])
-    json_schema = FileField('json_file', validators=[DataRequired()])
+    json_schema = FileField('json_file', validators=[Optional()])
     dataset_group_name = StringField('dataset_group_name', validators=[DataRequired()])
     fabricate_joinable = BooleanField('fabricate_joinable', validators=[Optional()],
                                       default=False)

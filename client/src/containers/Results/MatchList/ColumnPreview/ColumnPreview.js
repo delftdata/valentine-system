@@ -43,10 +43,10 @@ class ColumnPreview extends Component {
                         <TableHead>
                             <TableRow>
                                 <StyledTableCell align="center">
-                                    {this.props.sourceName}
+                                    {this.props.targetName}
                                 </StyledTableCell>
                                 <StyledTableCell align="center">
-                                    {this.props.targetName}
+                                    {this.props.sourceName}
                                 </StyledTableCell>
                               </TableRow>
                         </TableHead>
@@ -54,10 +54,10 @@ class ColumnPreview extends Component {
                             {this.props.sourceData.map((item, index) => (
                                 <StyledTableRow key={index}>
                                     <StyledTableCell className={classes.Cell} align="center">
-                                        {item}
+                                        {this.props.targetData[index]}
                                     </StyledTableCell>
                                     <StyledTableCell className={classes.Cell} align="center">
-                                        {this.props.targetData[index]}
+                                        {item}
                                     </StyledTableCell>
                                 </StyledTableRow>
                                 )

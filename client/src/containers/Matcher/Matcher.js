@@ -7,7 +7,6 @@ import classes from "./Matcher.module.css";
 import {Button} from "@material-ui/core";
 import axios from "axios";
 import Modal from "../../components/UI/Modal/Modal";
-import Spinner from "../../components/UI/Spinner/Spinner";
 import Response from "../../components/Forms/Response/Response";
 
 class Matcher extends Component {
@@ -15,7 +14,6 @@ class Matcher extends Component {
     state = {
         selectedTables: [],
         selectedAlgorithms: [],
-        loading: false,
         responseReceived: false,
         latestResponse: ""
     }
@@ -37,18 +35,17 @@ class Matcher extends Component {
             alert("No selected algorithms!");
             return;
         }
-        this.setState({loading: true});
         const requestBody = {
             "tables": this.state.selectedTables,
             "algorithms": this.state.selectedAlgorithms
         };
         axios({
           method: "post",
-          url:  process.env.REACT_APP_SERVER_ADDRESS + "/matches/minio/submit_batch_job",
+          url:  process.env.REACT_APP_SERVER_ADDRESS + "/matches/holistic/submit_batch_job",
           headers: {},
           data: requestBody})
-            .then(response => {this.setState({loading: false, responseReceived: true, latestResponse: response.data});})
-            .catch(error => {this.setState( {loading: false} ); console.log(error);})
+            .then(response => {this.setState({responseReceived: true, latestResponse: response.data});})
+            .catch(error => { console.log(error);})
     }
 
     closeResponseHandler = () => {
@@ -58,9 +55,6 @@ class Matcher extends Component {
     render() {
         return(
             <Aux>
-                <Modal show={this.state.loading}>
-                    <Spinner />
-                </Modal>
                 <Modal show={this.state.responseReceived} modalClosed={this.closeResponseHandler}>
                     <Response response={this.state.latestResponse}/>
                 </Modal>
@@ -70,9 +64,6 @@ class Matcher extends Component {
                             header={"Select Tables"}
                             sendSelected={(val) => this.getSelected(val, "tables")}
                         />
-                        <Button variant="contained" color="primary" onClick={this.sendJob}>
-                        Add New Source
-                    </Button>
                     </div>
                 </div>
                 <div className={classes.AlgorithmSelection}>
