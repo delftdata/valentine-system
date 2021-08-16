@@ -5,3 +5,6 @@ tpch
 */.bash_history
 */.cache/
 */**/__pycache__
+deploy-charts-minikube.sh
+k8s-minikube
+helm-config-minikube

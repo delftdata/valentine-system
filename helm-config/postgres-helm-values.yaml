@@ -1,5 +1,6 @@
 postgresqlUsername: test
 postgresqlPassword: test
+postgresqlPostgresPassword: test
 postgresqlDatabase: postgres-db
 service:
   port: 5432
