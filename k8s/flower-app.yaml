@@ -61,10 +61,10 @@ spec:
             - name: MINIO_SECRET_KEY
               value: "minio123"
             - name: POSTGRES_USER
-              value: "test"
+              value: "postgres"
             - name: POSTGRES_PASSWORD
-              value: "test"
+              value: "postgres"
             - name: POSTGRES_HOST
-              value: "postgres-db"
+              value: "postgres-postgresql"
             - name: POSTGRES_PORT
               value: "5432"
