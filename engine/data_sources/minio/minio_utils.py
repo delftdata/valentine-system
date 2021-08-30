@@ -27,7 +27,8 @@ def get_pandas_df_from_minio_csv_file(minio_client: Minio, bucket_name: str, obj
                          header=header,
                          encoding=get_in_memory_encoding(data[:16 * 1024]),
                          sep=get_in_memory_delimiter(data[:16 * 1024]),
-                         on_bad_lines='warn')
+                         on_bad_lines='warn',
+                         encoding_errors='ignore')
     except Exception:
         raise ValentineLoadDataError
     else:
@@ -42,7 +43,8 @@ def get_valentine_schema_from_minio_csv_file(minio_client: Minio, bucket_name: s
                          index_col=False,
                          encoding=get_in_memory_encoding(data[:16 * 1024]),
                          sep=get_in_memory_delimiter(data[:16 * 1024]),
-                         on_bad_lines='warn')
+                         on_bad_lines='warn',
+                         encoding_errors='ignore')
         i = 0
         schema = {}
         for (column_name, column_data) in df.iteritems():
@@ -73,7 +75,8 @@ def get_column_sample_from_minio_csv_file(minio_client: Minio, bucket_name: str,
                      index_col=False,
                      encoding=get_in_memory_encoding(data[:16 * 1024]),
                      sep=get_in_memory_delimiter(data[:16 * 1024]),
-                     on_bad_lines='warn')
+                     on_bad_lines='warn',
+                     encoding_errors='ignore')
     sample = df[column_name].dropna().tolist()[:n]
     if len(sample) < n:
         sample = sample + [''] * (n - len(sample))
@@ -89,7 +92,8 @@ def get_column_sample_from_minio_csv_file2(minio_client: Minio, bucket_name: str
                                    nrows=n,
                                    encoding=get_in_memory_encoding(data[:16 * 1024]),
                                    sep=get_in_memory_delimiter(data[:16 * 1024]),
-                                   on_bad_lines='warn').fillna('')
+                                   on_bad_lines='warn',
+                                   encoding_errors='ignore').fillna('')
     return list(df.columns), list(df.values)
 
 
