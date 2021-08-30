@@ -4,7 +4,9 @@ import uuid
 from timeit import default_timer
 from typing import Union
 
-from engine import app, celery
+from urllib3.exceptions import ProtocolError
+
+from engine import app, celery, ValentineLoadDataError
 from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.postgres.postgres_source import PostgresSource
 from engine.data_sources.postgres.postgres_table import PostgresTable
@@ -49,7 +51,9 @@ def get_table(source: str, table_name: str, db_name: str, load_data: bool) -> Un
     return table
 
 
-@celery.task
+@celery.task(autoretry_for=(ValentineLoadDataError, ProtocolError,),
+             retry_kwargs={'max_retries': 5},
+             default_retry_delay=5)
 def get_matches_holistic(job_id: str, matching_algorithm: str, algorithm_params: dict,
                          target_table: tuple, source_table: tuple):
     matcher = get_matcher(matching_algorithm, algorithm_params)
