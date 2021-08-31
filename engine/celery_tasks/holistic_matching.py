@@ -1,9 +1,12 @@
 import gzip
 import json
 import uuid
+from itertools import combinations
 from timeit import default_timer
-from typing import Union
+from typing import Union, Optional, Iterator
 
+from celery import chord
+from more_itertools import unique_everseen
 from urllib3.exceptions import ProtocolError
 
 from engine import app, celery, ValentineLoadDataError
@@ -15,7 +18,7 @@ from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.minio.minio_source import MinioSource
 from engine.data_sources.minio.minio_table import MinioTable
-from engine.utils.api_utils import get_matcher, AtlasPayload, get_atlas_payload, get_atlas_source
+from engine.utils.api_utils import get_matcher, AtlasPayload, get_atlas_payload, get_atlas_source, validate_matcher
 
 
 class NonSupportedBackend(Exception):
@@ -51,6 +54,31 @@ def get_table(source: str, table_name: str, db_name: str, load_data: bool) -> Un
     return table
 
 
+@celery.task
+def initiate_holistic_matching_job(job_uuid: str,
+                                   algorithms: list[dict[str, Optional[dict[str, object]]]],
+                                   tables):
+    for algorithm in algorithms:
+        algorithm_name, algorithm_params = list(algorithm.items())[0]
+        algorithm_uuid: str = job_uuid + "_" + algorithm_name
+        validate_matcher(algorithm_name, algorithm_params, "minio_postgres")
+        app.logger.info(f"Sending job: {algorithm_uuid} to Celery")
+
+        combs = combinations(tables, 2)
+
+        deduplicated_table_combinations: Iterator[tuple[tuple[str, str, str], tuple[str, str, str]]] = unique_everseen([
+            ((comb[0]['db_name'], comb[0]['table_name'], comb[0]['source']),
+             (comb[1]['db_name'], comb[1]['table_name'], comb[1]['source']))
+            for comb in combs
+            if comb[0] != comb[1]], key=frozenset)
+
+        start = default_timer()
+        callback = merge_matches.s(algorithm_uuid, start)
+        header = [get_matches_holistic.s(algorithm_uuid, algorithm_name, algorithm_params, *table_combination)
+                  for table_combination in deduplicated_table_combinations]
+        chord(header)(callback)
+
+
 @celery.task(autoretry_for=(ValentineLoadDataError, ProtocolError,),
              retry_kwargs={'max_retries': 5},
              default_retry_delay=5)
@@ -60,12 +88,14 @@ def get_matches_holistic(job_id: str, matching_algorithm: str, algorithm_params:
     target_db_name, target_table_name, t_source = target_table
     source_db_name, source_table_name, s_source = source_table
     load_data = False if matching_algorithm in schema_only_algorithms else True
+    app.logger.info(f'Retrieving tables {source_table_name} | {target_table_name} for job {job_id}')
     target_table = get_table(t_source, target_table_name, target_db_name, load_data=load_data)
     source_table = get_table(s_source, source_table_name, source_db_name, load_data=load_data)
     matches = matcher.get_matches(source_table, target_table)
     task_uuid: str = str(uuid.uuid4())
     task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
     holistic_job_source_db.set(job_id, json.dumps({"target": t_source, "source": s_source}))
+    app.logger.info(f'Job {job_id} with tables {source_table_name} | {target_table_name} completed successfully ')
     return task_uuid
 
 
