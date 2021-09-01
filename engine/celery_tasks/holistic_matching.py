@@ -5,7 +5,6 @@ from itertools import combinations
 from timeit import default_timer
 from typing import Union, Optional, Iterator
 
-from celery import chord
 from more_itertools import unique_everseen
 from urllib3.exceptions import ProtocolError
 
@@ -13,7 +12,8 @@ from engine import app, celery, ValentineLoadDataError
 from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.postgres.postgres_source import PostgresSource
 from engine.data_sources.postgres.postgres_table import PostgresTable
-from engine.db import task_result_db, runtime_db, insertion_order_db, match_result_db, holistic_job_source_db
+from engine.db import task_result_db, insertion_order_db, match_result_db, holistic_job_source_db, \
+    holistic_jobs_completed_tasks_db, holistic_jobs_total_number_of_tasks_db, holistic_job_progression_counters
 from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.minio.minio_source import MinioSource
@@ -39,7 +39,6 @@ def get_matches_minio(matching_algorithm: str, algorithm_params: dict, target_ta
     matches = matcher.get_matches(source_minio_table, target_minio_table)
     task_uuid: str = str(uuid.uuid4())
     task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
-    return task_uuid
 
 
 def get_table(source: str, table_name: str, db_name: str, load_data: bool) -> Union[PostgresTable, MinioTable]:
@@ -54,6 +53,14 @@ def get_table(source: str, table_name: str, db_name: str, load_data: bool) -> Un
     return table
 
 
+def get_deduplicated_table_combinations(tables) -> Iterator[tuple[tuple[str, str, str], tuple[str, str, str]]]:
+    combs = combinations(tables, 2)
+    return unique_everseen([((comb[0]['db_name'], comb[0]['table_name'], comb[0]['source']),
+                             (comb[1]['db_name'], comb[1]['table_name'], comb[1]['source']))
+                            for comb in combs
+                            if comb[0] != comb[1]], key=frozenset)
+
+
 @celery.task
 def initiate_holistic_matching_job(job_uuid: str,
                                    algorithms: list[dict[str, Optional[dict[str, object]]]],
@@ -64,19 +71,12 @@ def initiate_holistic_matching_job(job_uuid: str,
         validate_matcher(algorithm_name, algorithm_params, "minio_postgres")
         app.logger.info(f"Sending job: {algorithm_uuid} to Celery")
 
-        combs = combinations(tables, 2)
+        for table_combination in get_deduplicated_table_combinations(tables):
+            get_matches_holistic.s(algorithm_uuid, algorithm_name, algorithm_params, *table_combination).apply_async()
 
-        deduplicated_table_combinations: Iterator[tuple[tuple[str, str, str], tuple[str, str, str]]] = unique_everseen([
-            ((comb[0]['db_name'], comb[0]['table_name'], comb[0]['source']),
-             (comb[1]['db_name'], comb[1]['table_name'], comb[1]['source']))
-            for comb in combs
-            if comb[0] != comb[1]], key=frozenset)
-
-        start = default_timer()
-        callback = merge_matches.s(algorithm_uuid, start)
-        header = [get_matches_holistic.s(algorithm_uuid, algorithm_name, algorithm_params, *table_combination)
-                  for table_combination in deduplicated_table_combinations]
-        chord(header)(callback)
+        number_of_tasks: int = len(list(get_deduplicated_table_combinations(tables)))
+        holistic_jobs_total_number_of_tasks_db.set(algorithm_uuid, number_of_tasks)
+        insertion_order_db.rpush('insertion_ordered_ids', algorithm_uuid)
 
 
 @celery.task(autoretry_for=(ValentineLoadDataError, ProtocolError,),
@@ -95,8 +95,9 @@ def get_matches_holistic(job_id: str, matching_algorithm: str, algorithm_params:
     task_uuid: str = str(uuid.uuid4())
     task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
     holistic_job_source_db.set(job_id, json.dumps({"target": t_source, "source": s_source}))
+    holistic_jobs_completed_tasks_db.rpush(job_id, task_uuid)
+    holistic_job_progression_counters.incr(job_id)
     app.logger.info(f'Job {job_id} with tables {source_table_name} | {target_table_name} completed successfully ')
-    return task_uuid
 
 
 @celery.task
@@ -113,7 +114,6 @@ def get_matches_postgres(matching_algorithm: str, algorithm_params: dict, target
     matches = matcher.get_matches(source_minio_table, target_minio_table)
     task_uuid: str = str(uuid.uuid4())
     task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
-    return task_uuid
 
 
 @celery.task
@@ -128,9 +128,10 @@ def get_matches_atlas(matching_algorithm: str, algorithm_params: dict, target_ta
 
 
 @celery.task
-def merge_matches(individual_match_uuids: list, job_uuid: str, start: float, max_number_of_matches: int = None):
+def merge_matches(job_uuid: str, max_number_of_matches: int = None):
     app.logger.info(f"Starting to merge results of job: {job_uuid}")
     start_merge = default_timer()
+    individual_match_uuids = holistic_jobs_completed_tasks_db.lrange(job_uuid, 0, -1)
     sorted_flattened_merged_matches = [item for sublist in
                                        [json.loads(gzip.decompress(task_result_db.get(task_uuid)))
                                         for task_uuid in individual_match_uuids]
@@ -142,15 +143,12 @@ def merge_matches(individual_match_uuids: list, job_uuid: str, start: float, max
     app.logger.info(f"Sorting results of job: {job_uuid} completed in {default_timer() - start_sort}")
     if max_number_of_matches is not None:
         sorted_flattened_merged_matches = sorted_flattened_merged_matches[:max_number_of_matches]
-    end: float = default_timer()
-    runtime: float = end - start
     app.logger.info(f"Starting to save results to db of job: {job_uuid}")
     start_store = default_timer()
-    runtime_db.set(job_uuid, runtime)
-    insertion_order_db.rpush('insertion_ordered_ids', job_uuid)
     match_result_db.set(job_uuid, gzip.compress(json.dumps(sorted_flattened_merged_matches).encode('gbk')))
     app.logger.info(f"job's : {job_uuid} results saved successfully in {default_timer() - start_store}")
     start_delete = default_timer()
     del sorted_flattened_merged_matches
     task_result_db.delete(*individual_match_uuids)
     app.logger.info(f"job's: {job_uuid} intermediate results deleted successfully in {default_timer() - start_delete}")
+    holistic_jobs_completed_tasks_db.delete(job_uuid)

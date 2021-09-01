@@ -14,11 +14,7 @@ app.config['CELERY_BROKER_URL'] = f"amqp://{os.environ['RABBITMQ_DEFAULT_USER']}
                                   f"{os.environ['RABBITMQ_PORT']}/"
 
 
-app.config['CELERY_RESULT_BACKEND_URL'] = f"redis://:{os.environ['REDIS_PASSWORD']}@" \
-                                          f"{os.environ['REDIS_HOST']}:" \
-                                          f"{os.environ['REDIS_PORT']}/0"
-
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND_URL'])
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 VALENTINE_METRICS_TO_COMPUTE = {

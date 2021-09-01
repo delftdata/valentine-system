@@ -3,7 +3,9 @@ import json
 
 from flask import Response, jsonify, Blueprint
 
-from engine.db import match_result_db, insertion_order_db, verified_match_db, runtime_db, holistic_job_source_db
+from engine.db import match_result_db, insertion_order_db, verified_match_db, runtime_db, holistic_job_source_db, \
+    holistic_jobs_total_number_of_tasks_db, holistic_job_progression_counters
+from engine.celery_tasks.holistic_matching import merge_matches
 
 app_matches_results = Blueprint('app_matches_results', __name__)
 
@@ -12,7 +14,15 @@ JOB_DOES_NOT_EXIST_RESPONSE_STR = "Job does not exist"
 
 @app_matches_results.get('/results/finished_jobs')
 def get_finished_jobs():
-    return jsonify(insertion_order_db.lrange('insertion_ordered_ids', 0, -1))
+    finished_jobs = []
+    for started_job_id in insertion_order_db.lrange('insertion_ordered_ids', 0, -1):
+        if match_result_db.exists(started_job_id):
+            finished_jobs.append(started_job_id)
+        elif holistic_jobs_total_number_of_tasks_db.get(started_job_id) \
+                == holistic_job_progression_counters.get(started_job_id):
+            merge_matches.s(started_job_id).apply_async()
+            finished_jobs.append(started_job_id)
+    return jsonify(finished_jobs)
 
 
 @app_matches_results.get('/results/job_results/<job_id>')
