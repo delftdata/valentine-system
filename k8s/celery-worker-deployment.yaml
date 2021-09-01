@@ -17,13 +17,13 @@ spec:
           image: delftdatasystems/schema-matching-engine:latest
           resources:
             limits:
-              memory: "3Gi"
+              memory: "2Gi"
               cpu: "1"
             requests:
-              memory: "3Gi"
+              memory: "2Gi"
               cpu: "1"
           command: ["celery"]
-          args: ["-A", "app.celery", "worker", "-l", "INFO", "--concurrency=1"]
+          args: ["-A", "app.celery", "worker", "-l", "INFO", "--concurrency=1 --max-memory-per-child=1953125"]
           ports:
             - containerPort: 5000
           env:

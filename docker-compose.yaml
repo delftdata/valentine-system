@@ -50,11 +50,11 @@ services:
       - env_files/minio.env
       - env_files/rabbitmq.env
       - env_files/postgres.env
-    command: celery -A app.celery worker -l INFO --concurrency=1
+    command: celery -A app.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
 
   redis:
     image: redis:latest
-    command: redis-server --requirepass redis
+    command: redis-server --requirepass redis --maxmemory 512mb
     ports:
       - "6379:6379"
 

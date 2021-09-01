@@ -8,5 +8,5 @@ persistence:
 replicas: 4
 resources:
   requests:
-    memory: 1Gi
+    memory: 2Gi
     cpu: 1

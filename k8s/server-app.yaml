@@ -29,11 +29,11 @@ spec:
           image: delftdatasystems/schema-matching-engine:latest
           resources:
             limits:
-              memory: "8Gi"
-              cpu: "2"
+              memory: "2Gi"
+              cpu: "1"
             requests:
-              memory: "8Gi"
-              cpu: "2"
+              memory: "2Gi"
+              cpu: "1"
           command: ["gunicorn"]
           args: ["-b", "0.0.0.0:5000", "app:app", "-t", "60", "-w", "2", "--threads", "10"]
           ports:
