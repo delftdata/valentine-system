@@ -23,7 +23,7 @@ spec:
               memory: "2Gi"
               cpu: "1"
           command: ["celery"]
-          args: ["-A", "app.celery", "worker", "-l", "INFO", "--concurrency=1 --max-memory-per-child=1953125"]
+          args: ["-A", "app.celery", "worker", "-l", "INFO", "--concurrency=1", "--max-memory-per-child=1953125"]
           ports:
             - containerPort: 5000
           env:
