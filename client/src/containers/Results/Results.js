@@ -26,10 +26,11 @@ class Results extends Component {
         this.setState({loading: true})
         axios({
              method: "get",
-             url: process.env.REACT_APP_SERVER_ADDRESS + "/results/finished_jobs"
+             url: process.env.REACT_APP_SERVER_ADDRESS + "/results/get_jobs_with_progress"
         }).then(res => {
             let jobs = {};
-            res.data.forEach(jobId => jobs[jobId] = {rankedList: [], showRankedList: false});
+            Object.keys(res.data).forEach(jobId => jobs[jobId] = {rankedList: [], showRankedList: false,
+                progress: res.data[jobId]});
             this.setState({loading: false, jobs: jobs});
         }).catch(err => {
             this.setState({loading: false});
@@ -57,6 +58,17 @@ class Results extends Component {
             this.setState({jobs: jobs, loading: false});
         }).catch(err => {
             this.setState({loading: false});
+            console.log(err);
+        })
+    }
+
+    forceMerge = (jobId) => {
+        axios({
+             method: "post",
+             url: process.env.REACT_APP_SERVER_ADDRESS + "/results/force_merge/" + jobId
+        }).then((res) => {
+            console.log(res.data);
+        }).catch(err => {
             console.log(err);
         })
     }
@@ -164,6 +176,21 @@ class Results extends Component {
                                                             }}
                                                             onClick={() => this.deleteJob(jobId)}>
                                                             Delete job
+                                                        </Button>
+                                                        <p>
+                                                            Progress: {job.progress}
+                                                        </p>
+                                                        <Button
+                                                            style={{
+                                                                borderRadius: 10,
+                                                                color: "white",
+                                                                padding: "10px 10px",
+                                                                marginLeft: "10px",
+                                                                fontSize: "14px",
+                                                                background: "#581845"
+                                                            }}
+                                                            onClick={() => this.forceMerge(jobId)}>
+                                                            Force Merge
                                                         </Button>
                                                         {renderedList}
                                                     </div>);

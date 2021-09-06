@@ -25,6 +25,33 @@ def get_finished_jobs():
     return jsonify(finished_jobs)
 
 
+@app_matches_results.get('/results/get_jobs_with_progress')
+def get_jobs_with_progress():
+    jobs = {}
+    for job_id in insertion_order_db.lrange('insertion_ordered_ids', 0, -1):
+        total = holistic_jobs_total_number_of_tasks_db.get(job_id)
+        completed = holistic_job_progression_counters.get(job_id)
+        if total == completed and not match_result_db.exists(job_id):
+            merge_matches.s(job_id).apply_async()
+        jobs = {job_id: f"{completed}/{total}"}
+    return jsonify(jobs)
+
+
+@app_matches_results.post('/results/force_merge/<job_id>')
+def force_merge(job_id: str):
+    if match_result_db.exists(job_id):
+        return Response("Merge already completed", status=200)
+    merge_matches.s(job_id).apply_async()
+    return Response("Force merge success", status=200)
+
+
+@app_matches_results.get('/results/job_progress/<job_id>')
+def get_job_progress(job_id: str):
+    total = holistic_jobs_total_number_of_tasks_db.get(job_id)
+    completed = holistic_job_progression_counters.get(job_id)
+    return Response(f"{completed}/{total}", status=200)
+
+
 @app_matches_results.get('/results/job_results/<job_id>')
 def get_job_results(job_id: str):
     results = json.loads(gzip.decompress(match_result_db.get(job_id)))
