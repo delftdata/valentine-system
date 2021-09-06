@@ -16,7 +16,7 @@ celery.conf.update(task_serializer='msgpack',
                    accept_content=['msgpack'],
                    result_serializer='msgpack',
                    task_acks_late=True,
-                   worker_prefetch_multiplier=1
+                   worker_prefetch_multiplier=2
                    )
 
 app.json_encoder = ValentineJsonEncoder
