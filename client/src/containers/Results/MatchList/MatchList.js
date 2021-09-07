@@ -65,15 +65,14 @@ class MatchList extends Component {
     deleteMatchHandler = (matchIndex, save) => {
         const rankedList = [...this.state.rankedList];
         rankedList.splice(matchIndex, 1);
-        this.setState({rankedList: rankedList, loading: true});
+        this.setState({rankedList: rankedList});
         if(save){
             axios({
                  method: "post",
                  url: process.env.REACT_APP_SERVER_ADDRESS + "/results/save_verified_match/" + this.state.jobId + "/" + matchIndex
             }).then(() => {
-                this.setState({loading: false});
+                console.log('save_verified_match responded');
             }).catch(err => {
-                this.setState({loading: false});
                 console.log(err);
             });
         }else{
@@ -81,9 +80,8 @@ class MatchList extends Component {
                  method: "post",
                  url: process.env.REACT_APP_SERVER_ADDRESS + "/results/discard_match/" + this.state.jobId + "/" + matchIndex
             }).then(() => {
-                this.setState({loading: false});
+                console.log('discard_match responded');
             }).catch(err => {
-                this.setState({loading: false});
                 console.log(err);
             })
         }
@@ -103,7 +101,6 @@ class MatchList extends Component {
     }
 
     getColumnSamples = (dbName, tableName, columnName, source) => {
-        this.setState({loading: true});
         let source_db;
         if(source){
             source_db = this.props.sources['source']
@@ -121,13 +118,12 @@ class MatchList extends Component {
                      columnName
             }).then(res => {
                 if(source){
-                    this.setState({loading: false, sourceData: res.data});
+                    this.setState({sourceData: res.data});
                 }
                 else{
-                    this.setState({loading: false, targetData: res.data});
+                    this.setState({targetData: res.data});
                 }
             }).catch(err => {
-                this.setState({loading: false});
                 console.log(err);
             })
     }
@@ -141,9 +137,9 @@ class MatchList extends Component {
     render() {
         return (
             <Aux>
-                {/*<Modal show={this.state.loading}>*/}
-                {/*    <Spinner />*/}
-                {/*</Modal>*/}
+                <Modal show={this.state.loading}>
+                    <Spinner />
+                </Modal>
                 <Modal show={this.state.showData} modalClosed={this.closeShowDataHandler}>
                     <ColumnPreview sourceName={this.state.sourceColumn} targetName={this.state.targetColumn}
                                    sourceData={this.state.sourceData} targetData={this.state.targetData}/>

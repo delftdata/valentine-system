@@ -13,7 +13,8 @@ from engine.algorithms.algorithms import schema_only_algorithms
 from engine.data_sources.postgres.postgres_source import PostgresSource
 from engine.data_sources.postgres.postgres_table import PostgresTable
 from engine.db import task_result_db, insertion_order_db, match_result_db, holistic_job_source_db, \
-    holistic_jobs_completed_tasks_db, holistic_jobs_total_number_of_tasks_db, holistic_job_progression_counters
+    holistic_jobs_completed_tasks_db, holistic_jobs_total_number_of_tasks_db, holistic_job_progression_counters, \
+    holistic_job_uncompleted_tasks_queue
 from engine.data_sources.atlas.atlas_source import AtlasSource
 from engine.data_sources.atlas.atlas_table import AtlasTable
 from engine.data_sources.minio.minio_source import MinioSource
@@ -65,24 +66,40 @@ def get_deduplicated_table_combinations(tables) -> Iterator[tuple[tuple[str, str
 def initiate_holistic_matching_job(job_uuid: str,
                                    algorithms: list[dict[str, Optional[dict[str, object]]]],
                                    tables):
+    number_of_tasks: int = len(list(get_deduplicated_table_combinations(tables)))
     for algorithm in algorithms:
         algorithm_name, algorithm_params = list(algorithm.items())[0]
-        algorithm_uuid: str = job_uuid + "_" + algorithm_name
         validate_matcher(algorithm_name, algorithm_params, "minio_postgres")
-        app.logger.info(f"Sending job: {algorithm_uuid} to Celery")
-
-        for table_combination in get_deduplicated_table_combinations(tables):
-            get_matches_holistic.s(algorithm_uuid, algorithm_name, algorithm_params, *table_combination).apply_async()
-
-        number_of_tasks: int = len(list(get_deduplicated_table_combinations(tables)))
+        algorithm_uuid: str = job_uuid + "_" + algorithm_name
         holistic_jobs_total_number_of_tasks_db.set(algorithm_uuid, number_of_tasks)
         insertion_order_db.rpush('insertion_ordered_ids', algorithm_uuid)
+        for table_combination in get_deduplicated_table_combinations(tables):
+            task_uuid: str = str(uuid.uuid4())
+            payload = json.dumps({'a1': algorithm_name,
+                                  'a2': algorithm_params,
+                                  't1': table_combination[0],
+                                  't2': table_combination[1]})
+            holistic_job_uncompleted_tasks_queue.hset(algorithm_uuid, key=task_uuid, value=payload)
+        for task_id, payload in holistic_job_uncompleted_tasks_queue.hgetall(algorithm_uuid).items():
+            payload = json.loads(payload)
+            app.logger.info(f"Sending job: {algorithm_uuid} to Celery")
+            get_matches_holistic.s(task_id, algorithm_uuid, payload['a1'], payload['a2'], payload['t1'],
+                                   payload['t2']).apply_async()
+
+
+@celery.task
+def restart_failed_holistic_tasks(job_uuid: str):
+    for task_id, payload in holistic_job_uncompleted_tasks_queue.hgetall(job_uuid).items():
+        payload = json.loads(payload)
+        app.logger.info(f"Restarting task: {task_id}  of job: {job_uuid}")
+        get_matches_holistic.s(task_id, job_uuid, payload['a1'], payload['a2'], payload['t1'],
+                               payload['t2']).apply_async()
 
 
 @celery.task(autoretry_for=(ValentineLoadDataError, ProtocolError,),
              retry_kwargs={'max_retries': 5},
              default_retry_delay=5)
-def get_matches_holistic(job_id: str, matching_algorithm: str, algorithm_params: dict,
+def get_matches_holistic(task_id: str, job_id: str, matching_algorithm: str, algorithm_params: dict,
                          target_table: tuple, source_table: tuple):
     matcher = get_matcher(matching_algorithm, algorithm_params)
     target_db_name, target_table_name, t_source = target_table
@@ -92,11 +109,11 @@ def get_matches_holistic(job_id: str, matching_algorithm: str, algorithm_params:
     target_table = get_table(t_source, target_table_name, target_db_name, load_data=load_data)
     source_table = get_table(s_source, source_table_name, source_db_name, load_data=load_data)
     matches = matcher.get_matches(source_table, target_table)
-    task_uuid: str = str(uuid.uuid4())
-    task_result_db.set(task_uuid, gzip.compress(json.dumps(matches).encode('gbk')))
+    task_result_db.set(task_id, gzip.compress(json.dumps(matches).encode('gbk')))
     holistic_job_source_db.set(job_id, json.dumps({"target": t_source, "source": s_source}))
-    holistic_jobs_completed_tasks_db.rpush(job_id, task_uuid)
+    holistic_jobs_completed_tasks_db.rpush(job_id, task_id)
     holistic_job_progression_counters.incr(job_id)
+    holistic_job_uncompleted_tasks_queue.hdel(job_id, task_id)
     app.logger.info(f'Job {job_id} with tables {source_table_name} | {target_table_name} completed successfully ')
 
 

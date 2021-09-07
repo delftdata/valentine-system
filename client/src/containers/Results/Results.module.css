@@ -29,3 +29,19 @@
 .Pagination {
     transform: translateX(-100px);
 }
+
+.Loading {
+    width: 25%;
+    flex: 50%;
+    padding: 5px;
+}
+
+.Progress {
+    display: flex;
+}
+
+.ProgressText {
+    flex: 50%;
+    padding: 5px;
+    transform: translateY(-25px);
+}

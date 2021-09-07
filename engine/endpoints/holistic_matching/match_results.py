@@ -4,8 +4,8 @@ import json
 from flask import Response, jsonify, Blueprint
 
 from engine.db import match_result_db, insertion_order_db, verified_match_db, runtime_db, holistic_job_source_db, \
-    holistic_jobs_total_number_of_tasks_db, holistic_job_progression_counters
-from engine.celery_tasks.holistic_matching import merge_matches
+    holistic_jobs_total_number_of_tasks_db, holistic_job_progression_counters, holistic_job_uncompleted_tasks_queue
+from engine.celery_tasks.holistic_matching import merge_matches, restart_failed_holistic_tasks
 
 app_matches_results = Blueprint('app_matches_results', __name__)
 
@@ -33,8 +33,16 @@ def get_jobs_with_progress():
         completed = holistic_job_progression_counters.get(job_id)
         if total == completed and not match_result_db.exists(job_id):
             merge_matches.s(job_id).apply_async()
-        jobs = {job_id: f"{completed}/{total}"}
+        jobs[job_id] = f"{completed}/{total}"
     return jsonify(jobs)
+
+
+@app_matches_results.post('/results/restart_failed_tasks/<job_id>')
+def restart_failed_tasks(job_id: str):
+    if holistic_job_uncompleted_tasks_queue.hlen(job_id) == 0:
+        return Response("Job does not have any failed tasks", status=200)
+    restart_failed_holistic_tasks.s(job_id).apply_async()
+    return Response("Restart failed tasks success", status=200)
 
 
 @app_matches_results.post('/results/force_merge/<job_id>')

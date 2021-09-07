@@ -60,6 +60,13 @@ holistic_job_progression_counters: Redis = Redis(host=os.environ['REDIS_HOST'],
                                                  decode_responses=True,
                                                  db=8)
 
+holistic_job_uncompleted_tasks_queue: Redis = Redis(host=os.environ['REDIS_HOST'],
+                                                    port=os.environ['REDIS_PORT'],
+                                                    password=os.environ['REDIS_PASSWORD'],
+                                                    charset="utf-8",
+                                                    decode_responses=True,
+                                                    db=9)
+
 minio_client: Minio = Minio(f"{os.environ['MINIO_HOST']}:{os.environ['MINIO_PORT']}",
                             access_key=os.environ['MINIO_ACCESS_KEY'],
                             secret_key=os.environ['MINIO_SECRET_KEY'],

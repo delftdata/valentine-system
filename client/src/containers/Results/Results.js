@@ -3,7 +3,7 @@ import axios from "axios";
 
 import classes from "./Results.module.css";
 import Aux from "../../hoc/Aux";
-import {TableContainer} from "@material-ui/core";
+import {LinearProgress, TableContainer} from "@material-ui/core";
 import TablePagination from "@material-ui/core/TablePagination";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -12,6 +12,8 @@ import Button from "@material-ui/core/Button";
 import TableFooter from "@material-ui/core/TableFooter";
 import TableRow from "@material-ui/core/TableRow";
 import GetAppIcon from "@material-ui/icons/GetApp";
+import Modal from "../../components/UI/Modal/Modal";
+import Spinner from "../../components/UI/Spinner/Spinner";
 
 class Results extends Component {
 
@@ -23,7 +25,6 @@ class Results extends Component {
     }
 
     componentDidMount() {
-        this.setState({loading: true})
         axios({
              method: "get",
              url: process.env.REACT_APP_SERVER_ADDRESS + "/results/get_jobs_with_progress"
@@ -31,9 +32,8 @@ class Results extends Component {
             let jobs = {};
             Object.keys(res.data).forEach(jobId => jobs[jobId] = {rankedList: [], showRankedList: false,
                 progress: res.data[jobId]});
-            this.setState({loading: false, jobs: jobs});
+            this.setState({jobs: jobs});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
@@ -48,16 +48,14 @@ class Results extends Component {
     };
 
     deleteJob = (jobId) => {
-        this.setState({loading: true});
         axios({
              method: "post",
              url: process.env.REACT_APP_SERVER_ADDRESS + "/results/delete_job/" + jobId
         }).then(() => {
             const jobs = {...this.state.jobs};
             delete jobs[jobId];
-            this.setState({jobs: jobs, loading: false});
+            this.setState({jobs: jobs});
         }).catch(err => {
-            this.setState({loading: false});
             console.log(err);
         })
     }
@@ -66,6 +64,17 @@ class Results extends Component {
         axios({
              method: "post",
              url: process.env.REACT_APP_SERVER_ADDRESS + "/results/force_merge/" + jobId
+        }).then((res) => {
+            console.log(res.data);
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+
+    restartFailedTasks = (jobId) => {
+        axios({
+             method: "post",
+             url: process.env.REACT_APP_SERVER_ADDRESS + "/results/restart_failed_tasks/" + jobId
         }).then((res) => {
             console.log(res.data);
         }).catch(err => {
@@ -100,12 +109,14 @@ class Results extends Component {
     }
 
     downloadDataset = (jobId) => {
+        this.setState({loading: true});
         axios({
             method: "get",
             url: process.env.REACT_APP_SERVER_ADDRESS +
                  "/results/download_job_results/" + jobId,
             responseType: 'blob',
         }).then(res => {
+            this.setState({loading: false});
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -113,6 +124,7 @@ class Results extends Component {
             document.body.appendChild(link);
             link.click();
         }).catch(err => {
+            this.setState({loading: false});
             console.log(err);
         })
     }
@@ -120,9 +132,9 @@ class Results extends Component {
     render() {
         return (
             <Aux>
-                {/*<Modal show={this.state.loading}>*/}
-                {/*    <Spinner />*/}
-                {/*</Modal>*/}
+                <Modal show={this.state.loading}>
+                    <Spinner />
+                </Modal>
                 <div className={classes.Parent}>
                         <TableContainer className={classes.Container}>
                             <Table className={classes.Results}>
@@ -140,9 +152,22 @@ class Results extends Component {
                                             const splitJobId = jobId.split("_");
                                             const id = splitJobId[0];
                                             const algorithmName = splitJobId[1];
+                                            const splittedProgress = job.progress.split('/')
+                                            const progress = splittedProgress[0]
+                                            const total = splittedProgress[1]
                                             return (<div className={classes.Result}>
                                                         <p>Job: {id}</p>
                                                         <p>Algorithm: {algorithmName}</p>
+                                                        <div className={classes.Progress}>
+                                                            <div className={classes.Loading}>
+                                                                <LinearProgress
+                                                                    variant="determinate"
+                                                                    value={(progress / total) * 100} />
+                                                            </div>
+                                                            <div className={classes.ProgressText}>
+                                                                <p>{job.progress}</p>
+                                                            </div>
+                                                        </div>
                                                         <Button
                                                             style={{
                                                                 borderRadius: 10,
@@ -177,9 +202,6 @@ class Results extends Component {
                                                             onClick={() => this.deleteJob(jobId)}>
                                                             Delete job
                                                         </Button>
-                                                        <p>
-                                                            Progress: {job.progress}
-                                                        </p>
                                                         <Button
                                                             style={{
                                                                 borderRadius: 10,
@@ -191,6 +213,18 @@ class Results extends Component {
                                                             }}
                                                             onClick={() => this.forceMerge(jobId)}>
                                                             Force Merge
+                                                        </Button>
+                                                        <Button
+                                                            style={{
+                                                                borderRadius: 10,
+                                                                color: "white",
+                                                                padding: "10px 10px",
+                                                                marginLeft: "10px",
+                                                                fontSize: "14px",
+                                                                background: "#BAA100"
+                                                            }}
+                                                            onClick={() => this.restartFailedTasks(jobId)}>
+                                                            Restart Failed Tasks
                                                         </Button>
                                                         {renderedList}
                                                     </div>);

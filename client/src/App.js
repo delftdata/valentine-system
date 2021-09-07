@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Route, Switch } from "react-router-dom";
-
+import axios from "axios";
 import Layout from "./components/Layout/Layout";
 import Matcher from "./containers/Matcher/Matcher";
 import AlgorithmEvaluation from "./containers/AlgorithmEvaluation/AlgorithmEvaluation"
@@ -20,6 +20,8 @@ import BuildTwoToneIcon from '@material-ui/icons/BuildTwoTone';
 import ZoomInTwoToneIcon from '@material-ui/icons/ZoomInTwoTone';
 import AssessmentTwoToneIcon from '@material-ui/icons/AssessmentTwoTone';
 
+axios.defaults.maxBodyLength = Infinity
+axios.defaults.maxContentLength = Infinity
 
 class App extends Component {
 
