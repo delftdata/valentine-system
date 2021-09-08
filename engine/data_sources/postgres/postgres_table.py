@@ -26,8 +26,8 @@ class PostgresTable(BaseTable):
         return __str
 
     @property
-    def unique_identifier(self) -> tuple:
-        return self.__db_name, self.__table_name
+    def unique_identifier(self) -> str:
+        return f'{self.__db_name}:{self.__table_name}'
 
     @property
     def db_belongs_uid(self) -> object:
