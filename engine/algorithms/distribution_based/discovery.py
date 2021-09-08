@@ -198,11 +198,13 @@ def correlation_clustering_pulp(vertexes: list, edges: dict):
                                      .format(str(i)
                                              .replace(" ", "__WHITESPACE__")
                                              .replace("-", "__DASH__")
-                                             .replace(">", "__GREATER__"),
+                                             .replace(">", "__GREATER__")
+                                             .replace("/", "__BACKSLASH__"),
                                              str(j)
                                              .replace(" ", "__WHITESPACE__")
                                              .replace("-", "__DASH__")
-                                             .replace(">", "__GREATER__")))
+                                             .replace(">", "__GREATER__")
+                                             .replace("/", "__BACKSLASH__")))
               for i in set_u for j in set_v}
 
     sum1 = plp.lpSum(x_vars[i, j] for i in set_u for j in set_v if edges[i][j] == 1)
@@ -218,7 +220,8 @@ def correlation_clustering_pulp(vertexes: list, edges: dict):
         result[literal_eval(v.name
                             .replace("__WHITESPACE__", " ")
                             .replace("__DASH__", "-")
-                            .replace("__GREATER__", ">"))] = v.varValue
+                            .replace("__GREATER__", ">")
+                            .replace("__BACKSLASH__", "/"))] = v.varValue
 
     return result
 

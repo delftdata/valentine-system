@@ -89,7 +89,7 @@ class CorrelationClustering(BaseMatcher):
             else source_input.unique_identifier
         self.target_guid = target_input.db_belongs_uid if isinstance(target_input, BaseTable) \
             else target_input.unique_identifier
-        # self.dataset_name = source_input.name + "___" + target_input.name
+
         all_tables: List[Union[BaseTable, BaseDB]] = \
             list(source_input.get_tables().values()) + list(target_input.get_tables().values())
 
@@ -104,9 +104,9 @@ class CorrelationClustering(BaseMatcher):
         if self.process_num == 1:
             for table in all_tables:
 
-                self.column_names.extend(list(map(lambda x: (table.name, table.unique_identifier,
-                                                             x.name, x.unique_identifier),
-                                                  table.get_columns())))
+                self.column_names.extend([(table.name, table.unique_identifier,
+                                           x.name, x.unique_identifier)for x in table.get_columns()])
+
                 columns: List[BaseColumn] = table.get_columns()
                 for tup in ingestion_column_generator(columns, table.name, table.unique_identifier,
                                                       self.quantiles, self.uuid):
@@ -115,9 +115,8 @@ class CorrelationClustering(BaseMatcher):
         else:
             with get_context("spawn").Pool(self.process_num) as process_pool:
                 for table in all_tables:
-                    self.column_names.extend(list(map(lambda x: (table.name, table.unique_identifier,
-                                                                 x.name, x.unique_identifier),
-                                                      table.get_columns())))
+                    self.column_names.extend([(table.name, table.unique_identifier,
+                                               x.name, x.unique_identifier)for x in table.get_columns()])
                     columns: List[BaseColumn] = table.get_columns()
                     process_pool.map(process_columns, ingestion_column_generator(columns, table.name,
                                                                                  table.unique_identifier,

@@ -190,7 +190,8 @@ def process_columns(tup: tuple):
         column.quantile_histogram = QuantileHistogram(column.long_name, column.ranks, column.size, quantiles)
     folder = get_project_root() + '/algorithms/distribution_based/cache/column_store/' + uuid
     create_folder(folder)
-    with open(f'{folder}/{column.table_name}_{column.name}.pkl', 'wb') as output:
+    with open(make_filename_safe(f'{folder}/{column.table_name}_{column.name}.pkl'),
+              'wb') as output:
         pickle.dump(column, output, pickle.HIGHEST_PROTOCOL)
     del column
 
@@ -313,8 +314,13 @@ def cleanup_files(uuid: str):
 
 
 def get_column_from_store(file_name: str, uuid: str):
-    file_path = f'{get_project_root()}/algorithms/distribution_based/cache/column_store/{uuid}/{file_name}.pkl'
+    file_path = make_filename_safe(
+        f'{get_project_root()}/algorithms/distribution_based/cache/column_store/{uuid}/{file_name}.pkl')
     if os.path.getsize(file_path) > 0:
         with open(file_path, 'rb') as pkl_file:
             data = pickle.load(pkl_file)
     return data
+
+
+def make_filename_safe(file_name: str):
+    return "".join([c for c in file_name if c.isalpha() or c.isdigit() or c == ' ']).rstrip()
