@@ -101,5 +101,6 @@ class CorrelationClusteringColumn(BaseColumn):
         with open(get_project_root() + '/algorithms/distribution_based/cache/global_ranks/' + task_uuid + '/'
                   + task_uuid + '.pkl', 'rb') as pkl_file:
             global_ranks: dict = pickle.load(pkl_file)
-            ranks = np.array(sorted([global_ranks[convert_data_type(x)] for x in column]))
+            ranks = np.array(sorted([global_ranks[dt_x] for x in column
+                                     if (dt_x := convert_data_type(x)) in global_ranks]))
             return ranks
