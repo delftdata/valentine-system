@@ -1,7 +1,7 @@
 # Build  COMA and its dependancies from source
-FROM maven:3-openjdk-8-slim as build-stage-COMA
+FROM openjdk:8-slim-bullseye as build-stage-COMA
 
-RUN apt-get update && apt-get -y --no-install-recommends install git patch dos2unix
+RUN apt-get update && apt-get -y --no-install-recommends install git patch dos2unix maven
 
 WORKDIR /usr/local
 
@@ -15,7 +15,7 @@ RUN git clone https://github.com/kPsarakis/COMA \
     && mv COMA/coma-engine/target/coma-engine-0.1-CE-SNAPSHOT-jar-with-dependencies.jar /usr/local/coma.jar
 
 # Python dependancies builder
-FROM python:3.9-slim as builder
+FROM python:3.9-slim-bullseye as builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends gcc g++
 
@@ -26,10 +26,10 @@ RUN pip3 install --upgrade pip \
     && python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt wordnet
 
 # Clean Python 3.9 env
-FROM python:3.9-slim as clean-Python
+FROM python:3.9-slim-bullseye as clean-Python
 
 # Create the final service
-FROM openjdk:8-slim
+FROM openjdk:8-slim-bullseye
 COPY --from=clean-Python / /
 
 COPY --from=builder /usr/local/ /usr/local
