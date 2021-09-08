@@ -1,21 +1,10 @@
-import os
 from celery import Celery
 from flask import Flask
 from flask_cors import CORS
 
-from engine.db import minio_client
-from engine.utils.utils import init_minio_buckets
-
 app = Flask(__name__)
 
-app.config['CELERY_BROKER_URL'] = f"amqp://{os.environ['RABBITMQ_DEFAULT_USER']}:" \
-                                  f"{os.environ['RABBITMQ_DEFAULT_PASS']}@" \
-                                  f"{os.environ['RABBITMQ_HOST']}:" \
-                                  f"{os.environ['RABBITMQ_PORT']}/"
-
-
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
+celery = Celery(app.name)
 
 VALENTINE_METRICS_TO_COMPUTE = {
     "names": ["precision", "recall", "f1_score", "precision_at_n_percent", "recall_at_sizeof_ground_truth",
@@ -31,8 +20,6 @@ VALENTINE_PLOTS_MINIO_BUCKET = "valentine-plots"
 
 SYSTEM_RESERVED_MINIO_BUCKETS = [TMP_MINIO_BUCKET, VALENTINE_RESULTS_MINIO_BUCKET, VALENTINE_FABRICATED_MINIO_BUCKET,
                                  VALENTINE_PLOTS_MINIO_BUCKET]
-
-init_minio_buckets(minio_client, SYSTEM_RESERVED_MINIO_BUCKETS)
 
 CORS(app)
 

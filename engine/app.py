@@ -1,6 +1,8 @@
 import logging
+import os
 
-from engine import app, celery
+from engine import app, celery, SYSTEM_RESERVED_MINIO_BUCKETS
+from engine.db import minio_client
 from engine.endpoints.holistic_matching.atlas import app_matches_atlas
 from engine.endpoints.holistic_matching.holistic import app_matches_holistic
 from engine.endpoints.holistic_matching.match_results import app_matches_results
@@ -10,9 +12,14 @@ from engine.endpoints.minio_utils.minio_utils import app_minio_utils
 from engine.endpoints.postgres_utils.postgres_utils import app_postgres_utils
 from engine.endpoints.valentine.results import app_valentine_results
 from engine.endpoints.valentine.valentine import app_valentine
-from engine.utils.utils import ValentineJsonEncoder
+from engine.utils.utils import ValentineJsonEncoder, init_minio_buckets
 
-celery.conf.update(task_serializer='msgpack',
+
+celery.conf.update(broker_url=f"amqp://{os.environ['RABBITMQ_DEFAULT_USER']}:" 
+                              f"{os.environ['RABBITMQ_DEFAULT_PASS']}@" 
+                              f"{os.environ['RABBITMQ_HOST']}:" 
+                              f"{os.environ['RABBITMQ_PORT']}/",
+                   task_serializer='msgpack',
                    accept_content=['msgpack'],
                    result_serializer='msgpack',
                    task_acks_late=True,
@@ -30,6 +37,8 @@ app.register_blueprint(app_valentine)
 app.register_blueprint(app_postgres_utils)
 app.register_blueprint(app_matches_postgres)
 app.register_blueprint(app_matches_holistic)
+
+init_minio_buckets(minio_client, SYSTEM_RESERVED_MINIO_BUCKETS)
 
 
 if __name__ != '__main__':
