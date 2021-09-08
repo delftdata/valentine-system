@@ -166,6 +166,7 @@ def merge_matches(job_uuid: str, max_number_of_matches: int = None):
     app.logger.info(f"job's : {job_uuid} results saved successfully in {default_timer() - start_store}")
     start_delete = default_timer()
     del sorted_flattened_merged_matches
-    task_result_db.delete(*individual_match_uuids)
+    if len(individual_match_uuids) != 0:
+        task_result_db.delete(*individual_match_uuids)
     app.logger.info(f"job's: {job_uuid} intermediate results deleted successfully in {default_timer() - start_delete}")
     holistic_jobs_completed_tasks_db.delete(job_uuid)
