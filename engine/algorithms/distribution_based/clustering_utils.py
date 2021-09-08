@@ -1,6 +1,5 @@
 import pickle
 import os
-import re
 import shutil
 import subprocess
 from functools import lru_cache
@@ -95,9 +94,8 @@ def process_emd(tup: tuple):
     name_i, name_j, k, quantile, intersection, uuid = unwrap_process_input_tuple(tup)
     tn_i, _, cn_i, _ = name_i
     tn_j, _, cn_j, _ = name_j
-
-    c1 = read_from_cache(str((tn_i, cn_i)), uuid)
-    c2 = read_from_cache(str((tn_j, cn_j)), uuid)
+    c1 = read_from_cache(f'{tn_i}_{cn_i}', uuid)
+    c2 = read_from_cache(f'{tn_j}_{cn_j}', uuid)
     if intersection:
         return k, intersection_emd(c1, c2, quantile)
     else:
@@ -190,12 +188,9 @@ def process_columns(tup: tuple):
     column = CorrelationClusteringColumn(column_name, column_uid, data, source_name, source_guid, quantiles, uuid)
     if column.size > 0:
         column.quantile_histogram = QuantileHistogram(column.long_name, column.ranks, column.size, quantiles)
-    tn_i, _, cn_i, _ = column.long_name
-    fname = (tn_i, cn_i)
     folder = get_project_root() + '/algorithms/distribution_based/cache/column_store/' + uuid
     create_folder(folder)
-    pickle_path = folder + '/' + re.sub('\\W+', '_', str(fname)) + '.pkl'
-    with open(pickle_path, 'wb') as output:
+    with open(f'{folder}/{column.table_name}_{column.name}.pkl', 'wb') as output:
         pickle.dump(column, output, pickle.HIGHEST_PROTOCOL)
     del column
 
@@ -231,8 +226,8 @@ def cuttoff_column_generator(matrix_a: dict, columns: List[Tuple[str, str, str, 
     """
     for column_name in columns:
         tn_i, _, cn_i, _ = column_name
-        fname = (tn_i, cn_i)
-        column = get_column_from_store(fname, uuid)
+        f_name = f'{tn_i}_{cn_i}'
+        column = get_column_from_store(f_name, uuid)
         yield matrix_a, column, threshold
 
 
@@ -248,8 +243,8 @@ def generate_global_ranks(data: list, uuid: str):
         The unique identifier of the run
     """
     ranks = unix_sort_ranks(set(data), uuid)
-    folder = get_project_root() + '/algorithms/distribution_based/cache/global_ranks/' + uuid
-    with open(folder + "/" + uuid + '.pkl', 'wb') as output:
+    with open(f'{get_project_root()}/algorithms/distribution_based/cache/global_ranks/{uuid}/ranks.pkl',
+              'wb') as output:
         pickle.dump(ranks, output, pickle.HIGHEST_PROTOCOL)
 
 
@@ -270,23 +265,26 @@ def unix_sort_ranks(corpus: set, uuid: str):
     dict
         The ranks in the form of k: value, v: the rank of the value
     """
-    folder = get_project_root() + '/algorithms/distribution_based/cache/sorts/' + uuid
-    with open(folder + "/unsorted_file.txt", 'w') as out:
+    with open(f'{get_project_root()}/algorithms/distribution_based/cache/sorts/{uuid}/unsorted_file.txt', 'w') as out:
         for var in corpus:
             print(str(var), file=out)
 
-    with open(folder + '/sorted_file.txt', 'w') as f:
+    with open(f'{get_project_root()}/algorithms/distribution_based/cache/sorts/{uuid}/sorted_file.txt', 'w') as f:
         if os.name == 'nt':
-            subprocess.call(['sort', folder + '/unsorted_file.txt'], stdout=f)
+            subprocess.call(['sort',
+                             f'{get_project_root()}/algorithms/distribution_based/cache/sorts/{uuid}/unsorted_file.txt'],
+                            stdout=f)
         else:
             sort_env = os.environ.copy()
             sort_env['LC_ALL'] = 'C'
-            subprocess.call(['sort', '-n', folder + '/unsorted_file.txt'], stdout=f, env=sort_env)
+            subprocess.call(['sort', '-n',
+                             f'{get_project_root()}/algorithms/distribution_based/cache/sorts/{uuid}/unsorted_file.txt'],
+                            stdout=f, env=sort_env)
 
     rank = 1
     ranks = []
 
-    with open(folder + '/sorted_file.txt', 'r') as f:
+    with open(f'{get_project_root()}/algorithms/distribution_based/cache/sorts/{uuid}/sorted_file.txt', 'r') as f:
         txt = f.read()
         for var in txt.splitlines():
             ranks.append((convert_data_type(var.replace('\n', '')), rank))
@@ -315,8 +313,7 @@ def cleanup_files(uuid: str):
 
 
 def get_column_from_store(file_name: str, uuid: str):
-    folder = get_project_root() + '/algorithms/distribution_based/cache/column_store/' + uuid
-    file_path = folder + '/' + re.sub('\\W+', '_', str(file_name)) + '.pkl'
+    file_path = f'{get_project_root()}/algorithms/distribution_based/cache/column_store/{uuid}/{file_name}.pkl'
     if os.path.getsize(file_path) > 0:
         with open(file_path, 'rb') as pkl_file:
             data = pickle.load(pkl_file)

@@ -98,8 +98,8 @@ class CorrelationClusteringColumn(BaseColumn):
         ndarray
             The ndarray that contains the ranks of the data
         """
-        with open(get_project_root() + '/algorithms/distribution_based/cache/global_ranks/' + task_uuid + '/'
-                  + task_uuid + '.pkl', 'rb') as pkl_file:
+        with open(f'{get_project_root()}/algorithms/distribution_based/cache/global_ranks/{task_uuid}/ranks.pkl',
+                  'rb') as pkl_file:
             global_ranks: dict = pickle.load(pkl_file)
             ranks = np.array(sorted([global_ranks[dt_x] for x in column
                                      if (dt_x := convert_data_type(x)) in global_ranks]))

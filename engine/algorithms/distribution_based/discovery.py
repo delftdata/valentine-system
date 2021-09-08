@@ -6,6 +6,8 @@ import networkx as nx
 import pulp as plp
 from multiprocessing import Pool
 
+from pulp import PULP_CBC_CMD
+
 from .clustering_utils import column_combinations, transform_dict, process_emd, parallel_cutoff_threshold, \
     cuttoff_column_generator, compute_cutoff_threshold
 
@@ -193,8 +195,14 @@ def correlation_clustering_pulp(vertexes: list, edges: dict):
     set_v = vertexes
 
     x_vars = {(i, j): plp.LpVariable(cat=plp.LpInteger, lowBound=0, upBound=1, name="({0},{1})"
-                                     .format(str(i).replace(" ", "__WHITESPACE__").replace("-", "__DASH__"),
-                                             str(j).replace(" ", "__WHITESPACE__").replace("-", "__DASH__")))
+                                     .format(str(i)
+                                             .replace(" ", "__WHITESPACE__")
+                                             .replace("-", "__DASH__")
+                                             .replace(">", "__GREATER__"),
+                                             str(j)
+                                             .replace(" ", "__WHITESPACE__")
+                                             .replace("-", "__DASH__")
+                                             .replace(">", "__GREATER__")))
               for i in set_u for j in set_v}
 
     sum1 = plp.lpSum(x_vars[i, j] for i in set_u for j in set_v if edges[i][j] == 1)
@@ -202,12 +210,15 @@ def correlation_clustering_pulp(vertexes: list, edges: dict):
 
     opt_model.setObjective(sum1 + sum2)
 
-    opt_model.solve()
+    opt_model.solve(PULP_CBC_CMD(msg=False))
 
     result = dict()
 
     for v in opt_model.variables():
-        result[literal_eval(v.name.replace("__WHITESPACE__", " ").replace("__DASH__", "-"))] = v.varValue
+        result[literal_eval(v.name
+                            .replace("__WHITESPACE__", " ")
+                            .replace("__DASH__", "-")
+                            .replace("__GREATER__", ">"))] = v.varValue
 
     return result
 
