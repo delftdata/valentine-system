@@ -1,5 +1,4 @@
 import React, {Component} from "react";
-import classes from './FabricatedDataPreview.module.css'
 import SimpleTable from '../../../components/UI/SimpleTable/SimpleTable'
 import axios from "axios";
 

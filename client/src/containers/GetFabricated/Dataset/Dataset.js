@@ -15,6 +15,8 @@ import TablePagination from "@material-ui/core/TablePagination";
 import FabricatedDataPreview from "../FabricatedDataPreview/FabricatedDataPreview";
 import axios from "axios";
 
+const FileSaver = require('file-saver');
+
 class Dataset extends Component {
 
     state = {
@@ -56,13 +58,8 @@ class Dataset extends Component {
             this.props.datasetId + "/" + fabricatedPairId,
             responseType: 'blob',
         }).then(res => {
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', fabricatedPairId + '.zip');
-            document.body.appendChild(link);
-            link.click();
             this.setState({loading: false});
+            FileSaver.saveAs(res.data, fabricatedPairId + '.zip');
         }).catch(err => {
             this.setState({loading: false});
             console.log(err);

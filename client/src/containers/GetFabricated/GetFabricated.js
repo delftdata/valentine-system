@@ -15,6 +15,8 @@ import TableRow from "@material-ui/core/TableRow";
 import Dataset from "./Dataset/Dataset";
 
 
+const FileSaver = require('file-saver');
+
 class GetFabricated extends Component {
 
     state = {
@@ -54,13 +56,8 @@ class GetFabricated extends Component {
             url: process.env.REACT_APP_SERVER_ADDRESS + "/valentine/results/download_fabricated_dataset/" + datasetId,
             responseType: 'blob',
         }).then(res => {
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', datasetId + '.zip');
-            document.body.appendChild(link);
-            link.click();
             this.setState({loading: false});
+            FileSaver.saveAs(res.data, datasetId + '.zip');
         }).catch(err => {
             this.setState({loading: false});
             console.log(err);

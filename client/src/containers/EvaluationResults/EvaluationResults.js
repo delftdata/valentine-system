@@ -16,6 +16,8 @@ import BarChartIcon from "@material-ui/icons/BarChart";
 import GetAppIcon from "@material-ui/icons/GetApp";
 
 
+const FileSaver = require('file-saver');
+
 class EvaluationResults extends Component {
 
     state = {
@@ -75,13 +77,8 @@ class EvaluationResults extends Component {
                 datasetGroup,
             responseType: 'blob',
         }).then(res => {
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', jobId + '.zip');
-            document.body.appendChild(link);
-            link.click();
             this.setState({loading: false});
+            FileSaver.saveAs(res.data, jobId + '.zip');
         }).catch(err => {
             this.setState({loading: false});
             console.log(err);

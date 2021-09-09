@@ -15,6 +15,9 @@ import GetAppIcon from "@material-ui/icons/GetApp";
 import Modal from "../../components/UI/Modal/Modal";
 import Spinner from "../../components/UI/Spinner/Spinner";
 
+
+const FileSaver = require('file-saver');
+
 class Results extends Component {
 
     state = {
@@ -117,12 +120,7 @@ class Results extends Component {
             responseType: 'blob',
         }).then(res => {
             this.setState({loading: false});
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', jobId + '.json');
-            document.body.appendChild(link);
-            link.click();
+            FileSaver.saveAs(res.data, jobId + '.json');
         }).catch(err => {
             this.setState({loading: false});
             console.log(err);

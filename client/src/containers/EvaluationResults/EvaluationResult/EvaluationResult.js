@@ -11,6 +11,8 @@ import TablePagination from "@material-ui/core/TablePagination";
 import SimpleTable from "../../../components/UI/SimpleTable/SimpleTable";
 import axios from "axios";
 
+const FileSaver = require('file-saver');
+
 
 const spurious_head = ["Column 1", "Column 2", "Similarity", "Type"]
 
@@ -61,12 +63,7 @@ class EvaluationResult extends Component {
                  fabricatedPairId,
             responseType: 'blob',
         }).then(res => {
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', fabricatedPairId);
-            document.body.appendChild(link);
-            link.click();
+            FileSaver.saveAs(res.data, fabricatedPairId + '.json');
         }).catch(err => {
             console.log(err);
         })
