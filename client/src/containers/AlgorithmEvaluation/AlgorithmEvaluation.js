@@ -5,7 +5,6 @@ import {Button} from "@material-ui/core";
 import FabricatedDatasets from "./FabricatedDatasets/FabricatedDatasets";
 import AlgorithmSelection from "./AlgorithmSelection/AlgorithmSelection";
 import Modal from "../../components/UI/Modal/Modal";
-import Spinner from "../../components/UI/Spinner/Spinner";
 import Response from "../../components/Forms/Response/Response";
 import axios from "axios";
 
