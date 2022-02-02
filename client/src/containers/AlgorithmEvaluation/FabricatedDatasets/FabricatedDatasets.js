@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import Aux from "../../../hoc/Aux";
+import Aux from "../../../hoc/Hoc";
 import Modal from "../../../components/UI/Modal/Modal";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import classes from "./FabricatedDatasets.module.css";

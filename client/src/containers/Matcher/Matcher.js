@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import Aux from "../../hoc/Aux";
+import Aux from "../../hoc/Hoc";
 import ListSource from "./ListSource/ListSource";
 import AlgorithmSelection from "./AlgorithmSelection/AlgorithmSelection";
 import classes from "./Matcher.module.css";

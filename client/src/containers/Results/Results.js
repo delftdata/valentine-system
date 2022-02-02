@@ -2,7 +2,7 @@ import React, { Component } from "react"
 import axios from "axios";
 
 import classes from "./Results.module.css";
-import Aux from "../../hoc/Aux";
+import Aux from "../../hoc/Hoc";
 import {LinearProgress, TableContainer} from "@material-ui/core";
 import TablePagination from "@material-ui/core/TablePagination";
 import Table from "@material-ui/core/Table";

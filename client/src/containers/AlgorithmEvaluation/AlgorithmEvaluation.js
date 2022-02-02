@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import Aux from "../../hoc/Aux";
+import Aux from "../../hoc/Hoc";
 import classes from "./AlgorithmEvaluation.module.css";
 import {Button} from "@material-ui/core";
 import FabricatedDatasets from "./FabricatedDatasets/FabricatedDatasets";

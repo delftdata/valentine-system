@@ -5,7 +5,7 @@ import axios from "axios";
 import classes from "./MatchList.module.css";
 import Modal from "../../../components/UI/Modal/Modal";
 import Spinner from "../../../components/UI/Spinner/Spinner";
-import Aux from "../../../hoc/Aux";
+import Aux from "../../../hoc/Hoc";
 import Paper from "@material-ui/core/Paper";
 import TableContainer from "@material-ui/core/TableContainer";
 import TablePagination from "@material-ui/core/TablePagination";

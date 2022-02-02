@@ -3,7 +3,7 @@ import classes from "./Dataset.module.css";
 import Button from "@material-ui/core/Button";
 import GetAppIcon from "@material-ui/icons/GetApp";
 import DeleteIcon from "@material-ui/icons/Delete";
-import Aux from "../../../hoc/Aux";
+import Aux from "../../../hoc/Hoc";
 import Modal from "../../../components/UI/Modal/Modal";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import {TableContainer} from "@material-ui/core";

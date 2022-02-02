@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import classes from "./DatasetFabrication.module.css";
 import {Button, TextField} from "@material-ui/core";
-import Aux from "../../hoc/Aux";
+import Aux from "../../hoc/Hoc";
 import FabricationParameters from "./FabricationParameters/FabricationParameters";
 import Modal from "../../components/UI/Modal/Modal";
 import Spinner from "../../components/UI/Spinner/Spinner";

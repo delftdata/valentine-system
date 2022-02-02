@@ -6,7 +6,7 @@ import TreeView from "@material-ui/lab/TreeView";
 import TreeItem from "@material-ui/lab/TreeItem";
 import Checkbox from "@material-ui/core/Checkbox";
 import classes from "./ListSource.module.css";
-import Aux from "../../../hoc/Aux";
+import Aux from "../../../hoc/Hoc";
 import axios from "axios";
 import Typography from "@material-ui/core/Typography";
 import PostgresLogo from "../../../assets/PostgreSQL-Logo.wine.svg"

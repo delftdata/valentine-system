@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Aux from "../../hoc/Aux";
+import Aux from "../../hoc/Hoc";
 import { withRouter } from 'react-router-dom'
 import researchLogo from "../../assets/research-svgrepo-com.svg";
 import dataLakeLogo from "../../assets/data-lake.svg"
