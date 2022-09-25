@@ -25,6 +25,8 @@ services:
       - env_files/rabbitmq.env
       - env_files/postgres.env
     restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
     command: gunicorn -b 0.0.0.0:5000 app:app -t 60 -w 1 --threads 1 --reload
 
   # S3-like object store holding the data that we want to match
@@ -50,7 +52,7 @@ services:
       - env_files/minio.env
       - env_files/rabbitmq.env
       - env_files/postgres.env
-    command: celery -A app.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    command: celery -A app.celery worker -l INFO --concurrency=4 --max-memory-per-child=2929687
 
   redis:
     image: redis:latest
@@ -60,7 +62,7 @@ services:
 
   # Message queue required by Celery
   celery-rabbitmq:
-    image: rabbitmq:3.8-management
+    image: rabbitmq:management
     restart: always
     env_file: env_files/rabbitmq.env
     ports:

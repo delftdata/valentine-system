@@ -1,7 +1,6 @@
-accessKey:
-  password: minio
-secretKey:
-  password: minio123
+auth:
+  rootUser: minio
+  rootPassword: minio123
 mode: distributed
 persistence:
   size: 4Gi
