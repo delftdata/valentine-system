@@ -41,14 +41,17 @@ class Coma(BaseMatcher):
         self.target_guid = target_input.db_belongs_uid if isinstance(target_input, BaseTable) \
             else target_input.unique_identifier
 
+        files_to_delete: set = set()
         for s_table, t_table in product(source_tables, target_tables):
             s_f_name, t_f_name = self.write_schema_csv_files(s_table, t_table)
             self.run_coma_jar(s_f_name, t_f_name, coma_output_file)
             raw_output = self.read_coma_output(s_f_name, t_f_name, coma_output_file)
             matches.extend(self.process_coma_output(raw_output, t_table, s_table))
-            delete_file(s_f_name)
-            delete_file(t_f_name)
+            files_to_delete.add(s_f_name)
+            files_to_delete.add(t_f_name)
 
+        for file in files_to_delete:
+            delete_file(file)
         delete_file(coma_output_file)
 
         return matches
