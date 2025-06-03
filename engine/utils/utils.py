@@ -7,7 +7,7 @@ import os
 import openpyxl
 from dateutil.parser import parse
 import chardet
-from flask.json import JSONEncoder
+from json import JSONEncoder
 import numpy as np
 from minio import Minio
 

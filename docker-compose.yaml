@@ -31,7 +31,7 @@ services:
 
   # S3-like object store holding the data that we want to match
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2021-08-17T20-53-08Z
     ports:
       - "9000:9000"
     volumes:
@@ -62,7 +62,7 @@ services:
 
   # Message queue required by Celery
   celery-rabbitmq:
-    image: rabbitmq:management
+    image: rabbitmq:3.11.28-management
     restart: always
     env_file: env_files/rabbitmq.env
     ports:
@@ -88,7 +88,7 @@ services:
       - celery-worker
 
   postgres-db:
-    image: postgres:latest
+    image: postgres:9.6
     env_file: env_files/postgres.env
     command: "postgres -c max_connections=100 -c shared_buffers=128MB"
     shm_size: 128M
